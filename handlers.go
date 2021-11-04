@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"sync"
 
@@ -10,7 +12,12 @@ import (
 	"github.com/thanhpk/randstr"
 )
 
-var clients map[string]chan []byte  // map of clients and channels for each client
+type client struct {
+	ch       chan []byte
+	isAuthed bool
+}
+
+var clients map[string]client       // map of clients and channels for each client
 var clients_lock sync.RWMutex       // Lock for clients map
 var upgrader = websocket.Upgrader{} // use default options
 var messages chan []byte            // Main bus for all messages
@@ -36,12 +43,27 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
+
+	range1 := net.ParseIP("128.0.0.0")
+	range2 := net.ParseIP("153.0.0.0")
+
 	id := randstr.Hex(16)
+	authed := false
+
+	strIp := r.Header.Get("X-Forwarded-For")
+	ip := net.ParseIP(strIp)
+
+	if bytes.Compare(ip, range1) >= 0 && bytes.Compare(ip, range2) <= 0 {
+		authed = true
+	}
+
+	//TODO: Add Ipv6 support
+
 	// Create UUID but badly
 	// Should work as we arent serving enough clients were psuedo random will mess us up
-
+	client := client{make(chan []byte), authed}
 	clients_lock.Lock()
-	clients[id] = make(chan []byte, 10)
+	clients[id] = client
 	clients_lock.Unlock()
 	log.Printf("new connection registered: %s\n", id)
 

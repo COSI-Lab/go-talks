@@ -55,7 +55,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 				// Add msg to channel for sending messages
 				// Have to do it this way as websocket handler is seperate function
 				select {
-				case ch <- msg:
+				case ch.ch <- msg:
 				default:
 					// the channel is blocking so we drop the data
 				}
@@ -69,7 +69,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		for _, ch := range clients {
 			select {
 			// Read message from channel
-			case msg := <-ch:
+			case msg := <-ch.ch:
 				// Add to main message bus. Basically allows us to bottleneck on purpose
 				messages <- msg
 			default:
@@ -83,7 +83,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		for _, ch := range clients {
 			select {
 			case msg := <-messages:
-				ch <- msg
+				ch.ch <- msg
 			default:
 				// dump the data
 			}
@@ -93,7 +93,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		for {
 			// Read message from channel
-			msg := <-ch
+			msg := <-ch.ch
 			// Send message to client
 			err := conn.WriteMessage(websocket.TextMessage, msg)
 			if err != nil {
