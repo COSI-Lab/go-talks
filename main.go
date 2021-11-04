@@ -18,6 +18,7 @@ func main() {
 	r.HandleFunc("/register", registerHandler)
 	r.HandleFunc("/authenticate", authenticateHandler)
 	r.HandleFunc("/socket/{id}", socketHandler)
+	r.HandleFunc("/health", healthHandler)
 
 	// static files
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
