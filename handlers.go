@@ -10,9 +10,11 @@ import (
 	"github.com/thanhpk/randstr"
 )
 
-var clients map[string]chan []byte
-var clients_lock sync.RWMutex
+var clients map[string]chan []byte  // map of clients and channels for each client
+var clients_lock sync.RWMutex       // Lock for clients map
 var upgrader = websocket.Upgrader{} // use default options
+var messages chan []byte            // Main bus for all messages
+var messages_lock sync.RWMutex      // Lock for messages
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 

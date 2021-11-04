@@ -65,6 +65,21 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	go func() {
+		messages_lock.Lock()
+		for _, ch := range clients {
+			select {
+			// Read message from channel
+			case msg := <-ch:
+				// Add to main message bus. Basically allows us to bottleneck on purpose
+				messages <- msg
+			default:
+				// dump the data
+			}
+		}
+		messages_lock.Unlock()
+	}()
+
+	go func() {
 		for {
 			// Read message from channel
 			msg := <-ch
