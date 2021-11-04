@@ -78,6 +78,17 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		messages_lock.Unlock()
 	}()
+	// Func above and below bottleneck the data and make sure all clients are on the same page
+	go func() {
+		for _, ch := range clients {
+			select {
+			case msg := <-messages:
+				ch <- msg
+			default:
+				// dump the data
+			}
+		}
+	}()
 
 	go func() {
 		for {
