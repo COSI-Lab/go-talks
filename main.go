@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -22,4 +23,12 @@ func main() {
 
 	// static files
 	r.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
+
+	l := &http.Server{
+		Addr:    ":8000",
+		Handler: r,
+	}
+
+	log.Printf("Serving on http://localhost:%d", 8000)
+	log.Fatalf("%s", l.ListenAndServe())
 }
