@@ -77,7 +77,7 @@ func authenticateHandler(w http.ResponseWriter, r *http.Request) {
 	msg, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading body: %s\n", err)
-		w.WriteHeader(500)
+		w.WriteHeader(401)
 		return
 	}
 
