@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -73,5 +75,25 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func authenticateHandler(w http.ResponseWriter, r *http.Request) {
+	// Authenticate client
+	// message will be password, id
+	msg, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("Error reading body: %s\n", err)
+		w.WriteHeader(500)
+		return
+	}
 
+	pw := strings.Split(string(msg), ",")[0]
+	id := strings.Split(string(msg), ",")[1]
+
+	// Cringe hardcoding of password but who cares
+	if pw == "temp pw" {
+		clients_lock.Lock()
+		clients[id].isAuthed = true // Giving me redlines, idk why, supposed to set client to authed
+		clients_lock.Unlock()
+		w.WriteHeader(200)
+	} else {
+		w.WriteHeader(400)
+	}
 }
