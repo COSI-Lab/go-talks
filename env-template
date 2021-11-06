@@ -1,0 +1,9 @@
+# DB information
+SQLITE_DB=talks.db
+
+# Web server configuration
+LISTEN=0.0.0.0
+PORT=5000
+USE_SSL=false
+# You must fill this in yourself
+TALKS_PASSWORD=

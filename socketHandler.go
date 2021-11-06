@@ -32,10 +32,10 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() {
 		// Close connection gracefully
 		conn.Close()
-		clients_lock.Lock()
+		clientsLock.Lock()
 		log.Printf("Error sending message %s : %s", id, err)
 		delete(clients, id)
-		clients_lock.Unlock()
+		clientsLock.Unlock()
 	}()
 
 	// Quick cringe go funcs
@@ -50,7 +50,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Error reading message %s : %s", id, err)
 				return
 			}
-			clients_lock.Lock()
+			clientsLock.Lock()
 			for _, ch := range clients {
 				// Add msg to channel for sending messages
 				// Have to do it this way as websocket handler is seperate function
@@ -60,12 +60,12 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 					// the channel is blocking so we drop the data
 				}
 			}
-			clients_lock.Unlock()
+			clientsLock.Unlock()
 		}
 	}()
 
 	go func() {
-		messages_lock.Lock()
+		messagesLock.Lock()
 		for _, ch := range clients {
 			select {
 			// Read message from channel
@@ -76,7 +76,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 				// dump the data
 			}
 		}
-		messages_lock.Unlock()
+		messagesLock.Unlock()
 	}()
 	// Func above and below bottleneck the data and make sure all clients are on the same page
 	go func() {

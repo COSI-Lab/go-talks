@@ -1,0 +1,13 @@
+version: '3.1'
+
+services:
+  web:
+    build: .
+    container_name: talks
+    env_file: .env
+    ports:
+      - 8000:5000
+    volumes:
+      - ./certs:/srv/website/certs:ro
+      - ./static:/srv/website/static:ro
+      - ./talks.db:/srv/website/talks.db
