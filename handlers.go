@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -45,24 +44,22 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-
-	range1 := net.ParseIP("128.0.0.0")
-	range2 := net.ParseIP("153.0.0.0")
-
+	// Create UUID but badly
+	// Should work as we arent serving enough clients were psuedo random will mess us up
 	id := randstr.Hex(16)
-	authed := false
 
+	// Check if client is within our subnet and so should be auto authed
 	strIp := r.Header.Get("X-Forwarded-For")
 	ip := net.ParseIP(strIp)
 
-	if bytes.Compare(ip, range1) >= 0 && bytes.Compare(ip, range2) <= 0 {
-		authed = true
+	authed := false
+	if ip != nil {
+		authed = isInSubnet(ip)
+	} else {
+		log.Println("Could not parse ip address \"X-Forwarded-For\":", strIp)
 	}
 
-	// TODO: Add Ipv6 support
-
-	// Create UUID but badly
-	// Should work as we arent serving enough clients were psuedo random will mess us up
+	// Create client object
 	client := client{make(chan []byte), authed}
 	clientsLock.Lock()
 	clients[id] = client
@@ -80,7 +77,7 @@ func authenticateHandler(w http.ResponseWriter, r *http.Request) {
 	msg, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Error reading body: %s\n", err)
-		w.WriteHeader(500)
+		w.WriteHeader(401)
 		return
 	}
 
@@ -90,7 +87,9 @@ func authenticateHandler(w http.ResponseWriter, r *http.Request) {
 	// Cringe hardcoding of password but who cares
 	if pw == "temp pw" {
 		clientsLock.Lock()
-		clients[id].isAuthed = true // Giving me redlines, idk why, supposed to set client to authed
+		if client, exists := clients[id]; exists {
+			client.isAuthed = true
+		}
 		clientsLock.Unlock()
 		w.WriteHeader(200)
 	} else {
