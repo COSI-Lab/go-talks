@@ -3,7 +3,7 @@ FROM golang:latest AS go-build
 
 WORKDIR /go/src/
 
-COPY ./go.mod ./
+COPY ./go.mod ./go.sum ./
 RUN go mod download
 
 COPY ./*.go ./
