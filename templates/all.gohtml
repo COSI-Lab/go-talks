@@ -1,0 +1,36 @@
+<html>
+    <head>
+        <title>Talks</title>
+        <link rel="stylesheet" type="text/css" href="style.css">
+    </head>
+    <body>
+        <h1> Talks </h1>
+        <h3> Upcoming Events For The Clarkson Open Source Institute Meetings </h3>
+        <h3> (dubsdot 2) </h3>
+        <table id="table">
+            <thead>
+                <tr>
+                    <th style="display: none;"></th>
+                    <th>Talk Presenter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="tb">
+                {{range .}}
+                <tr class="event">
+                    <td style="display: none;"> {{.id}} </td>
+                    <td class="name"> {{.name}} </td>
+                    <td class="type"> {{.talk_type}} </td>
+                    <td class="description"> {{.description}} </td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+                <p style="text-align: center;">
+            Ask an admin if you wish to have a talk completely erased
+        </p>
+        <h5> <a href="https://github.com/COSI-Lab/go-talks"> V1.5 </a> </h5>
+    </body>
+</html>

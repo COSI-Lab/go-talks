@@ -1,0 +1,55 @@
+<html>
+    <head>
+        <title>Talks</title>
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <script type="text/javascript" src="static/site.js"></script>
+    </head>
+    <body>
+    <h1>Talks</h1>
+    <h3> Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
+    <h3> (dubsdot 2) </h3>
+        <table id="table">
+            <thead>
+                <tr>
+                    <th style="display: none;"></th>
+                    <th>Talk Presenter</th>
+                    <th>Type</th>
+                    <th>Description</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody id="tb">
+                {{range .}}
+                <tr class="event">
+                    <td style="display: none;"> {{.id}} </td>
+                    <td class="name"> {{.name}} </td>
+                    <td class="type"> {{.talk_type}} </td>
+                    <td class="description"> {{.description}} </td>
+                    <td class="actions"> <button onclick="hide({{talk.id}})" > x </button> </td>
+                </tr>
+                {{ end }}
+                <tr>
+                    <th>
+                        <input id="name" type="text" placeholder="Name" value="" autocomplete="off">
+                    </th>
+                    <th>
+                        <select id="type">
+                            <option value="ForumTopic">Forum Topic</option>
+                            <option value="LightningTalk">Lightning Talk</option>
+                            <option value="ProjectUpdate">Project Update</option>
+                            <option value="Announcement">Announcement</option>
+                            <option value="AfterMeetingSlot">After-Meeting Slot</option>
+                        </select>
+                    </th>
+                    <th>
+                        <input id="description" type="text" placeholder="Description" value="" autocomplete="off">
+                    </th>
+                    <th>
+                        <button id="create" onclick="create()"> create </button>
+                    </th>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>
