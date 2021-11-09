@@ -10,8 +10,12 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var talks_password = ""
+
 func main() {
 	// Connect to the database
+	talks_password = os.Getenv("TALKS_PASSWORD")
+
 	err := ConnectDB("sqlite")
 	if err != nil {
 		log.Fatalln("Failed to connect to the database")
