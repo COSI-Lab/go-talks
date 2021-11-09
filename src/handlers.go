@@ -84,7 +84,6 @@ func authenticateHandler(w http.ResponseWriter, r *http.Request) {
 	pw := strings.Split(string(msg), ",")[0]
 	id := strings.Split(string(msg), ",")[1]
 
-	// Cringe hardcoding of password but who cares
 	if pw == talks_password {
 		clientsLock.Lock()
 		if client, exists := clients[id]; exists {

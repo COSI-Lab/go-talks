@@ -10,6 +10,7 @@ services:
     ports:
       - 8080:3000
     volumes:
+      - ./src:/srv/website/src:ro
       - ./certs:/srv/website/certs:ro
       - ./static:/srv/website/static:ro
       - ./talks.db:/srv/website/talks.db

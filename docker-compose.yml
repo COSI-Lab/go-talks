@@ -9,5 +9,4 @@ services:
       - 8000:5000
     volumes:
       - ./certs:/srv/website/certs:ro
-      - ./static:/srv/website/static:ro
       - ./talks.db:/srv/website/talks.db

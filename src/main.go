@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// Set up all tables
-	MakeDB()
+	// MakeDB()
 
 	r := mux.NewRouter()
 

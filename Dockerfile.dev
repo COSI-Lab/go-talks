@@ -3,8 +3,6 @@ FROM golang:latest
 WORKDIR /srv/website
 EXPOSE 3000
 
-RUN curl -sSL https://get.docker.com/ | sh
-
 # Get gin autoreload framework
 RUN go get "github.com/codegangsta/gin"
 
