@@ -11,6 +11,7 @@ import (
 )
 
 var talks_password = ""
+var hub Hub
 
 func main() {
 	// Connect to the database
@@ -32,8 +33,6 @@ func main() {
 
 	// "api" endpoints
 	r.HandleFunc("/talks", talksHandler)
-	r.HandleFunc("/register", registerHandler)
-	r.HandleFunc("/authenticate", authenticateHandler)
 	r.HandleFunc("/socket/{id}", socketHandler)
 	r.HandleFunc("/health", healthHandler)
 
@@ -69,8 +68,16 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
+	// Start the hub
+	hub = Hub{
+		clients:   make(map[*Client]bool),
+		broadcast: make(chan []byte),
+		toggle:    make(chan *Client),
+	}
+	go hub.run()
+
 	// Start server
-	log.Println("Web server is now listening for connections")
+	log.Println("Web server is now listening for connections on", srv.Addr)
 	if ssl {
 		log.Fatal(srv.ListenAndServeTLS("certs/cert.pem", "certs/privkey.pem"))
 	} else {
