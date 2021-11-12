@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
-	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 // DB is a global db connection to be shared
@@ -103,7 +104,6 @@ func ConnectDB(dbType string) error {
 func MakeDB() {
 	// Create all regular tables
 	DB.AutoMigrate(
-		&TalkType{},
 		&Talk{},
 	)
 }
@@ -112,5 +112,4 @@ func MakeDB() {
 func DropTables() {
 	// Drop tables in an order that won't invoke errors from foreign key constraints
 	DB.Migrator().DropTable(&Talk{})
-	DB.Migrator().DropTable(&TalkType{})
 }
