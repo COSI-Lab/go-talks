@@ -1,6 +1,10 @@
 package main
 
-import "sync"
+import (
+	"encoding/json"
+	"log"
+	"sync"
+)
 
 type Hub struct {
 	sync.RWMutex
@@ -9,7 +13,7 @@ type Hub struct {
 	clients map[*Client]bool
 
 	// Inbound messages from the clients
-	broadcast chan []byte
+	broadcast chan Message
 
 	// registers a client from the hub
 	register chan *Client
@@ -39,9 +43,16 @@ func (hub *Hub) run() {
 			close(client.send)
 		case message := <-hub.broadcast:
 			// broadcasts the message to all clients (including the one that sent the message)
+
+			// TODO: update the database
+			bytes, err := json.Marshal(message)
+			if err != nil {
+				log.Println("failed to marshal", err)
+			}
+
 			for client := range hub.clients {
 				select {
-				case client.send <- message:
+				case client.send <- bytes:
 				default:
 					// if sending to a client blocks we drop the client
 					close(client.send)

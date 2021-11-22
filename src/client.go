@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -18,6 +19,26 @@ type Client struct {
 	auth bool
 }
 
+type MessageType uint
+
+const (
+	Move MessageType = iota
+	New
+	Hide
+	Delete
+	Auth
+)
+
+type Message struct {
+	Type        MessageType `json:"type"`
+	Status      uint32      `json:"status,omitempty"`
+	Id          uint32      `json:"id,omitempty"`
+	Password    string      `json:"password,omitempty"`
+	Name        string      `json:"name,omitempty`
+	Talktype    TalkType    `json:"talktype,omitempty`
+	Description string      `json:"description,omitempty`
+}
+
 func (c *Client) read() {
 	defer func() {
 		hub.unregister <- c
@@ -26,13 +47,43 @@ func (c *Client) read() {
 
 	for {
 		// Read from the connection
-		_, message, err := c.conn.ReadMessage()
+		_, raw, err := c.conn.ReadMessage()
 		if err != nil {
 			log.Printf("error: %v", err)
 			break
 		}
 
-		// TODO Check that the message is in a good format
+		// Format the message
+		var message Message
+		err = json.Unmarshal(raw, &message)
+		if err != nil {
+			continue
+		}
+
+		// Handle authentication without consulting the hub
+		if message.Type == Auth {
+			var resp []byte
+			if message.Password == talks_password {
+				resp, err = json.Marshal(Message{Type: Auth, Status: 200})
+				if err != nil {
+					log.Println("Marshalling password response failed! Should never happen.", err)
+				}
+
+				c.auth = true
+			} else {
+				resp, err = json.Marshal(Message{Type: Auth, Status: 403})
+				if err != nil {
+					log.Println("Marshalling password response failed! Should never happen.", err)
+				}
+
+				c.auth = false
+			}
+
+			c.send <- resp
+			continue
+		}
+
+		// Foward all other message to be processed and broadcasted to other client
 		hub.broadcast <- message
 	}
 }
@@ -54,6 +105,8 @@ func (c *Client) write() {
 	}
 }
 
+var upgrader = websocket.Upgrader{} // TODO: Don't use default options
+
 func socketHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade the connection to a websocket
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -65,8 +118,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	client := &Client{conn: conn, send: make(chan []byte, 256)}
 	hub.register <- client
 
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
+	// Run send and recieve in goroutines
 	go client.write()
 	go client.read()
 }

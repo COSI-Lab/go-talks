@@ -14,9 +14,9 @@ var talks_password = ""
 var hub Hub
 
 func main() {
-	// Connect to the database
 	talks_password = os.Getenv("TALKS_PASSWORD")
 
+	// Connect to the database
 	err := ConnectDB("sqlite")
 	if err != nil {
 		log.Fatalln("Failed to connect to the database")
@@ -33,7 +33,7 @@ func main() {
 
 	// "api" endpoints
 	r.HandleFunc("/talks", talksHandler)
-	r.HandleFunc("/socket/{id}", socketHandler)
+	r.HandleFunc("/socket", socketHandler)
 	r.HandleFunc("/health", healthHandler)
 
 	// static files
@@ -71,7 +71,7 @@ func main() {
 	// Start the hub
 	hub = Hub{
 		clients:    make(map[*Client]bool),
-		broadcast:  make(chan []byte),
+		broadcast:  make(chan Message),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
