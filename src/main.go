@@ -70,9 +70,10 @@ func main() {
 
 	// Start the hub
 	hub = Hub{
-		clients:   make(map[*Client]bool),
-		broadcast: make(chan []byte),
-		toggle:    make(chan *Client),
+		clients:    make(map[*Client]bool),
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
 	}
 	go hub.run()
 

@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 )
 
@@ -14,11 +13,14 @@ type Client struct {
 
 	// Outbound messages
 	send chan []byte
+
+	// Marks the client as autheniticated
+	auth bool
 }
 
 func (c *Client) read() {
 	defer func() {
-		hub.toggle <- c
+		hub.unregister <- c
 		c.conn.Close()
 	}()
 
@@ -53,22 +55,15 @@ func (c *Client) write() {
 }
 
 func socketHandler(w http.ResponseWriter, r *http.Request) {
-	// Handles the websocket
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	if id == "" {
-		w.WriteHeader(404)
-		return
-	}
-
+	// Upgrade the connection to a websocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+
 	client := &Client{conn: conn, send: make(chan []byte, 256)}
-	hub.toggle <- client
+	hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.

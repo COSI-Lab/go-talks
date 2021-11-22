@@ -8,14 +8,17 @@ type Hub struct {
 	// Map of clients TODO: Make a HashSet
 	clients map[*Client]bool
 
-	// Inbound messages from the clients.
+	// Inbound messages from the clients
 	broadcast chan []byte
 
-	// registers or unregister a client from the hub.
-	toggle chan *Client
+	// registers a client from the hub
+	register chan *Client
+
+	// unregister a client from the hub
+	unregister chan *Client
 }
 
-func (hub *Hub) connections() int {
+func (hub *Hub) countConnections() int {
 	hub.RLock()
 	connections := len(hub.clients)
 	hub.RUnlock()
@@ -27,14 +30,13 @@ func (hub *Hub) run() {
 	for {
 		hub.Lock()
 		select {
-		case client := <-hub.toggle:
-			// registers or unregister a client from the hub.
-			if _, exists := hub.clients[client]; exists {
-				delete(hub.clients, client)
-				close(client.send)
-			} else {
-				hub.clients[client] = true
-			}
+		case client := <-hub.register:
+			// registers a client
+			hub.clients[client] = true
+		case client := <-hub.unregister:
+			// unregister a client
+			delete(hub.clients, client)
+			close(client.send)
 		case message := <-hub.broadcast:
 			// broadcasts the message to all clients (including the one that sent the message)
 			for client := range hub.clients {
