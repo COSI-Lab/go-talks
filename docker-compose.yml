@@ -8,5 +8,4 @@ services:
     ports:
       - 8000:5000
     volumes:
-      - ./certs:/srv/website/certs:ro
       - ./talks.db:/srv/website/talks.db

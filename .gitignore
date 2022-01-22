@@ -2,3 +2,4 @@
 .env
 go-talks
 talks.db
+main

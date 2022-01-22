@@ -9,7 +9,7 @@ import (
 type Hub struct {
 	sync.RWMutex
 
-	// Map of clients TODO: Make a HashSet
+	// Map of clients TODO: Make a HashSet?
 	clients map[*Client]bool
 
 	// Inbound messages from the clients
@@ -30,6 +30,15 @@ func (hub *Hub) countConnections() int {
 	return connections
 }
 
+func processMessage(message Message) bool {
+	switch message.Type {
+	case New:
+		DB.Create(&Talk{})
+	}
+
+	return false
+}
+
 func (hub *Hub) run() {
 	for {
 		hub.Lock()
@@ -43,8 +52,9 @@ func (hub *Hub) run() {
 			close(client.send)
 		case message := <-hub.broadcast:
 			// broadcasts the message to all clients (including the one that sent the message)
+			processMessage(message)
 
-			// TODO: update the database
+			// Serialize message into a byte slice
 			bytes, err := json.Marshal(message)
 			if err != nil {
 				log.Println("failed to marshal", err)

@@ -1,5 +1,7 @@
 package main
 
+import "time"
+
 type TalkType uint32
 
 const (
@@ -18,11 +20,12 @@ func (tt TalkType) String() string {
 }
 
 type Talk struct {
-	Id          uint32
-	Name        string
-	Type        TalkType
-	Description string
-	IsHidden    bool
-	Week        uint32
-	Order       uint32
+	Id          uint32   `gorm:"AUTO_INCREMENT, primary key"`
+	Name        string   `gorm:"not null"`
+	Type        TalkType `gorm:"not null"`
+	Description string   `gorm:"not null"`
+	IsHidden    bool     `gorm:"not null"`
+	Week        uint32   `gorm:"index, not null"`
+	Order       uint32   `gorm:"not null"`
+	CreatedAt   time.Time
 }

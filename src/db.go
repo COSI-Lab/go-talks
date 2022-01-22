@@ -113,3 +113,25 @@ func DropTables() {
 	// Drop tables in an order that won't invoke errors from foreign key constraints
 	DB.Migrator().DropTable(&Talk{})
 }
+
+func VisibleTalks() []Talk {
+	var talks []Talk
+	result := DB.Where("hidden = false").Find(&talks)
+
+	if result.Error != nil {
+		log.Println("ERROR", result)
+	}
+
+	return talks
+}
+
+func AllTalks() []Talk {
+	var talks []Talk
+	result := DB.Where("hidden = false").Find(&talks)
+
+	if result.Error != nil {
+		log.Println("ERROR", result)
+	}
+
+	return talks
+}

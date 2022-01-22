@@ -98,7 +98,7 @@ func (c *Client) write() {
 		w, err := c.conn.NextWriter(websocket.TextMessage)
 		if err != nil {
 			log.Printf("error: %v", err)
-			return
+			break
 		}
 
 		w.Write(message)

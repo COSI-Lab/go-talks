@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 var talks_password = ""
 var hub Hub
+var tmpls *template.Template
 
 func main() {
 	talks_password = os.Getenv("TALKS_PASSWORD")
@@ -23,7 +25,16 @@ func main() {
 	}
 
 	// Set up all tables
-	// MakeDB()
+	MakeDB()
+
+	// Load templates
+	tmpls, err = template.ParseGlob("templates/*")
+
+	if err != nil {
+		log.Fatalln("Failed to compile some template(s)", err)
+	} else {
+		log.Println(tmpls.DefinedTemplates())
+	}
 
 	r := mux.NewRouter()
 
@@ -51,15 +62,6 @@ func main() {
 		port = "5000"
 	}
 
-	// Set up ssl
-	sslString, exists := os.LookupEnv("USE_SSL")
-	var ssl bool
-	if sslString == "true" || sslString == "yes" {
-		ssl = true
-	} else if !exists || sslString == "false" || sslString == "no" {
-		ssl = false
-	}
-
 	// Create http server
 	srv := &http.Server{
 		Handler:      r,
@@ -79,9 +81,5 @@ func main() {
 
 	// Start server
 	log.Println("Web server is now listening for connections on", srv.Addr)
-	if ssl {
-		log.Fatal(srv.ListenAndServeTLS("certs/cert.pem", "certs/privkey.pem"))
-	} else {
-		log.Fatal(srv.ListenAndServe())
-	}
+	log.Fatal(srv.ListenAndServe())
 }
