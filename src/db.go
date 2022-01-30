@@ -116,7 +116,7 @@ func DropTables() {
 
 func VisibleTalks() []Talk {
 	var talks []Talk
-	result := DB.Where("hidden = false").Find(&talks)
+	result := DB.Where("is_hidden = false").Order("type").Find(&talks)
 
 	if result.Error != nil {
 		log.Println("ERROR", result)
@@ -127,11 +127,35 @@ func VisibleTalks() []Talk {
 
 func AllTalks() []Talk {
 	var talks []Talk
-	result := DB.Where("hidden = false").Find(&talks)
+	result := DB.Find(&talks)
 
 	if result.Error != nil {
 		log.Println("ERROR", result)
 	}
 
 	return talks
+}
+
+func CreateTalk(talk *Talk) {
+	result := DB.Create(talk)
+
+	if result.Error != nil {
+		log.Println("ERROR", result)
+	}
+}
+
+func HideTalk(id uint32) {
+	talk := Talk{}
+	result := DB.First(&talk, id)
+
+	if result.Error != nil {
+		log.Println("ERROR", result)
+	}
+
+	talk.IsHidden = true
+	result = DB.Save(&talk)
+
+	if result.Error != nil {
+		log.Println("ERROR", result)
+	}
 }

@@ -1,13 +1,14 @@
+<!DOCTYPE html>
 <html>
     <head>
         <title>Talks</title>
         <link rel="stylesheet" type="text/css" href="style.css">
-        <script type="text/javascript" src="static/site.js"></script>
+        <script type="text/javascript" src="site.js"></script>
     </head>
     <body>
-    <h1>Talks</h1>
-    <h3> Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
-    <h3> Wednesdays at 7pm </h3>
+        <h1>Talks</h1>
+        <h3> Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
+        <h3> Wednesdays at 7pm </h3>
         <table id="table">
             <thead>
                 <tr>
@@ -20,14 +21,14 @@
             </thead>
 
             <tbody id="tb">
-                {{range .}}
+                {{ range . }}
                 <tr class="event">
-                    <td style="display: none;"> {{.id}} </td>
-                    <td class="name"> {{.name}} </td>
-                    <td class="type"> {{.talk_type}} </td>
-                    <td class="description"> {{.description}} </td>
+                    <td style="display: none;"> {{.Id}} </td>
+                    <td class="name"> {{.Name}} </td>
+                    <td class="type"> {{.Type}} </td>
+                    <td class="description"> {{.Description}} </td>
                     <td class="actions">
-                        <button onclick='hide( {{ .id }} )' > x </button>
+                        <button onclick='hide( {{ .Id }} )' > x </button>
                     </td>
                 </tr>
                 {{ end }}
@@ -37,11 +38,11 @@
                     </th>
                     <th>
                         <select id="type">
-                            <option value="ForumTopic">Forum Topic</option>
-                            <option value="LightningTalk">Lightning Talk</option>
-                            <option value="ProjectUpdate">Project Update</option>
-                            <option value="Announcement">Announcement</option>
-                            <option value="AfterMeetingSlot">After-Meeting Slot</option>
+                            <option value=0>Forum Topic</option>
+                            <option value=1>Lightning Talk</option>
+                            <option value=2>Project Update</option>
+                            <option value=3>Announcement</option>
+                            <option value=4>After-Meeting Slot</option>
                         </select>
                     </th>
                     <th>

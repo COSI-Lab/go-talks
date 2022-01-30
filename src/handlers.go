@@ -7,7 +7,6 @@ import (
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	talks := VisibleTalks()
-
 	tmpls.ExecuteTemplate(w, "index.gohtml", talks)
 }
 

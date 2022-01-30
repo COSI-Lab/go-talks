@@ -22,11 +22,11 @@ type Client struct {
 type MessageType uint
 
 const (
-	Move MessageType = iota
-	New
-	Hide
-	Delete
-	Auth
+	NEW MessageType = iota
+	HIDE
+	DELETE
+	MOVE
+	AUTH
 )
 
 type Message struct {
@@ -34,9 +34,10 @@ type Message struct {
 	Status      uint32      `json:"status,omitempty"`
 	Id          uint32      `json:"id,omitempty"`
 	Password    string      `json:"password,omitempty"`
-	Name        string      `json:"name,omitempty`
-	Talktype    TalkType    `json:"talktype,omitempty`
-	Description string      `json:"description,omitempty`
+	Name        string      `json:"name,omitempty"`
+	Talktype    *TalkType   `json:"talktype,omitempty"`
+	Description string      `json:"description,omitempty"`
+	Week        string      `json:"week,omitempty"`
 }
 
 func (c *Client) read() {
@@ -61,17 +62,17 @@ func (c *Client) read() {
 		}
 
 		// Handle authentication without consulting the hub
-		if message.Type == Auth {
+		if message.Type == AUTH {
 			var resp []byte
 			if message.Password == talks_password {
-				resp, err = json.Marshal(Message{Type: Auth, Status: 200})
+				resp, err = json.Marshal(Message{Type: AUTH})
 				if err != nil {
 					log.Println("Marshalling password response failed! Should never happen.", err)
 				}
 
 				c.auth = true
 			} else {
-				resp, err = json.Marshal(Message{Type: Auth, Status: 403})
+				resp, err = json.Marshal(Message{Type: AUTH})
 				if err != nil {
 					log.Println("Marshalling password response failed! Should never happen.", err)
 				}
@@ -102,7 +103,10 @@ func (c *Client) write() {
 		}
 
 		w.Write(message)
+		w.Close()
 	}
+
+	log.Println("Client disconnected")
 }
 
 var upgrader = websocket.Upgrader{} // TODO: Don't use default options
@@ -115,7 +119,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := &Client{conn: conn, send: make(chan []byte, 256)}
+	client := &Client{conn: conn, send: make(chan []byte)}
 	hub.register <- client
 
 	// Run send and recieve in goroutines

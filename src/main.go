@@ -15,6 +15,15 @@ var talks_password = ""
 var hub Hub
 var tmpls *template.Template
 
+// Logs request Method and request URI
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// log.Println("[INFO]", r.Method, r.RequestURI)
+		log.Println("[INFO] " + r.Method + " " + r.RequestURI)
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	talks_password = os.Getenv("TALKS_PASSWORD")
 
@@ -37,6 +46,7 @@ func main() {
 	}
 
 	r := mux.NewRouter()
+	r.Use(loggingMiddleware)
 
 	// templated pages
 	r.HandleFunc("/", indexHandler)
@@ -44,7 +54,7 @@ func main() {
 
 	// "api" endpoints
 	r.HandleFunc("/talks", talksHandler)
-	r.HandleFunc("/socket", socketHandler)
+	r.HandleFunc("/ws", socketHandler)
 	r.HandleFunc("/health", healthHandler)
 
 	// static files
