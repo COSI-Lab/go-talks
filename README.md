@@ -2,7 +2,7 @@
 
 **Auto reload:**
 ```
-gin --all -d src -b main -a 3001 -i run
+gin -d src -x talks.db -b main -a 3001 -i
 ```
 
 ## Endpoints
