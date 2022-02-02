@@ -2,13 +2,19 @@
 <html>
     <head>
         <title>Talks</title>
-        <link rel="stylesheet" type="text/css" href="style.css">
-        <script type="text/javascript" src="site.js"></script>
+        <link rel="stylesheet" type="text/css" href="static/style.css">
+        <script> const week = {{.Week}}</script>
+        <script type="text/javascript" src="static/site.js"></script>
     </head>
     <body>
-        <h1>Talks</h1>
-        <h3> Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
-        <h3> Wednesdays at 7pm </h3>
+        <h1><a href="/"> Talks </a> </h1>
+        <h3>Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
+        <div class="week">
+            <a class="grow" href="/{{.PrevWeek}}"> ⬅️ </a>
+            <span class="grow"> Wed. {{.HumanWeek}} at 7pm </span>
+            <a class="grow" href="/{{.NextWeek}}"> ➡️ </a>
+        </div>
+        <br>
         <table id="table">
             <thead>
                 <tr>
@@ -21,7 +27,7 @@
             </thead>
 
             <tbody id="tb">
-                {{ range . }}
+                {{ range .Talks }}
                 <tr class="event">
                     <td style="display: none;"> {{.Id}} </td>
                     <td class="name"> {{.Name}} </td>

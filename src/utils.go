@@ -1,7 +1,9 @@
 package main
 
 import (
+	"log"
 	"net"
+	"time"
 )
 
 var ipv4net *net.IPNet
@@ -15,4 +17,71 @@ func isInSubnet(ip net.IP) bool {
 	}
 
 	return ipv4net.Contains(ip) || ipv6net.Contains(ip)
+}
+
+// Returns the next Wednesday in YYYYMMDD format
+// If today is a wednesday today's date is returned
+func nextWednesday() string {
+	const format = "20060102"
+	now := time.Now()
+
+	daysUntilWednesday := time.Wednesday - now.Weekday()
+
+	if daysUntilWednesday == 0 {
+		return now.Format(format)
+	} else if daysUntilWednesday > 0 {
+		return now.AddDate(0, 0, int(daysUntilWednesday)).Format(format)
+	} else {
+		return now.AddDate(0, 0, int(daysUntilWednesday)+7).Format(format)
+	}
+}
+
+func addWeek(week string) string {
+	const format = "20060102"
+	t, err := time.Parse(format, week)
+
+	if err != nil {
+		log.Fatalln("Failed to parse week:", err)
+	}
+
+	return t.AddDate(0, 0, 7).Format(format)
+}
+
+func subtractWeek(week string) string {
+	const format = "20060102"
+	t, err := time.Parse(format, week)
+
+	if err != nil {
+		log.Fatalln("Failed to parse week:", err)
+	}
+
+	return t.AddDate(0, 0, -7).Format(format)
+}
+
+func weekForHumans(week string) (string, error) {
+	const format = "20060102"
+	t, err := time.Parse(format, week)
+
+	if err != nil {
+		return "", err
+	}
+
+	return t.Format("January _2, 2006"), nil
+}
+
+func isPast(current, week string) bool {
+	const format = "20060102"
+	currentTime, err := time.Parse(format, current)
+
+	if err != nil {
+		log.Fatalln("Failed to parse week:", err)
+	}
+
+	weekTime, err := time.Parse(format, week)
+
+	if err != nil {
+		log.Fatalln("Failed to parse week:", err)
+	}
+
+	return currentTime.After(weekTime)
 }

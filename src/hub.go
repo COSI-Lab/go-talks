@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"time"
 )
 
 type Hub struct {
@@ -26,34 +25,21 @@ func (hub *Hub) countConnections() int {
 	return connections
 }
 
-// Returns the next Wednesday in YYYYMMDD format
-// If today is a wednesday today's date is returned
-func nextWednesday() string {
-	const format = "20060102"
-	now := time.Now()
-
-	daysUntilWednesday := time.Wednesday - now.Weekday()
-
-	if daysUntilWednesday == 0 {
-		return now.Format(format)
-	} else if daysUntilWednesday > 0 {
-		return now.AddDate(0, 0, int(daysUntilWednesday)).Format(format)
-	} else {
-		return now.AddDate(0, 0, int(daysUntilWednesday)+7).Format(format)
-	}
-}
-
 func processMessage(message Message) bool {
 	switch message.Type {
 	case NEW:
-		log.Println("Create talk {", message.Name, message.Description, message.Talktype, "}")
+		log.Println("[INFO] Create talk {", message.Name, message.Description, message.Talktype, "}")
 
 		if message.Week == "" {
 			message.Week = nextWednesday()
 		}
 
-		talk := &Talk{}
+		// You can not create a talk for a previous meeting
+		if isPast(nextWednesday(), message.Week) {
+			return false
+		}
 
+		talk := &Talk{}
 		if *message.Talktype > 4 {
 			return false
 		}
@@ -68,11 +54,12 @@ func processMessage(message Message) bool {
 			return false
 		}
 		talk.Name = message.Name
+		talk.Week = message.Week
 		talk.Order = 0
 
 		CreateTalk(talk)
 	case HIDE:
-		log.Println("Hide talk {", message.Id, "}")
+		log.Println("[INFO] Hide talk {", message.Id, "}")
 		HideTalk(message.Id)
 	}
 
@@ -85,12 +72,12 @@ func (hub *Hub) run() {
 		case client := <-hub.register:
 			// registers a client
 			hub.clients[client] = true
-			log.Println("Registered client", client.conn.RemoteAddr())
+			log.Println("[INFO] Registered client", client.conn.RemoteAddr())
 		case client := <-hub.unregister:
 			// unregister a client
 			delete(hub.clients, client)
 			close(client.send)
-			log.Println("Unregistered client", client.conn.RemoteAddr())
+			log.Println("[INFO] Unregistered client", client.conn.RemoteAddr())
 		case message := <-hub.broadcast:
 			// broadcasts the message to all clients (including the one that sent the message)
 			processMessage(message)
@@ -98,7 +85,7 @@ func (hub *Hub) run() {
 			// Serialize message into a byte slice
 			bytes, err := json.Marshal(message)
 			if err != nil {
-				log.Println("failed to marshal", err)
+				log.Println("[WARN] failed to marshal", err)
 			}
 
 			for client := range hub.clients {

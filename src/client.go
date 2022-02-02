@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"log"
-	"net/http"
 
 	"github.com/gorilla/websocket"
 )
@@ -67,14 +66,14 @@ func (c *Client) read() {
 			if message.Password == talks_password {
 				resp, err = json.Marshal(Message{Type: AUTH})
 				if err != nil {
-					log.Println("Marshalling password response failed! Should never happen.", err)
+					log.Println("[WARN] Marshalling password response failed! Should never happen.", err)
 				}
 
 				c.auth = true
 			} else {
 				resp, err = json.Marshal(Message{Type: AUTH})
 				if err != nil {
-					log.Println("Marshalling password response failed! Should never happen.", err)
+					log.Println("[WARN] Marshalling password response failed! Should never happen.", err)
 				}
 
 				c.auth = false
@@ -105,24 +104,4 @@ func (c *Client) write() {
 		w.Write(message)
 		w.Close()
 	}
-
-	log.Println("Client disconnected")
-}
-
-var upgrader = websocket.Upgrader{} // TODO: Don't use default options
-
-func socketHandler(w http.ResponseWriter, r *http.Request) {
-	// Upgrade the connection to a websocket
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	client := &Client{conn: conn, send: make(chan []byte)}
-	hub.register <- client
-
-	// Run send and recieve in goroutines
-	go client.write()
-	go client.read()
 }

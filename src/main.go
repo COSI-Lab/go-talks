@@ -18,7 +18,6 @@ var tmpls *template.Template
 // Logs request Method and request URI
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// log.Println("[INFO]", r.Method, r.RequestURI)
 		log.Println("[INFO] " + r.Method + " " + r.RequestURI)
 		next.ServeHTTP(w, r)
 	})
@@ -30,7 +29,7 @@ func main() {
 	// Connect to the database
 	err := ConnectDB("sqlite")
 	if err != nil {
-		log.Fatalln("Failed to connect to the database")
+		log.Fatalln("[ERROR] Failed to connect to the database", err)
 	}
 
 	// Set up all tables
@@ -40,17 +39,13 @@ func main() {
 	tmpls, err = template.ParseGlob("templates/*")
 
 	if err != nil {
-		log.Fatalln("Failed to compile some template(s)", err)
+		log.Fatalln("[ERROR] Failed to compile some template(s)", err)
 	} else {
-		log.Println(tmpls.DefinedTemplates())
+		log.Println("[INFO]", tmpls.DefinedTemplates())
 	}
 
 	r := mux.NewRouter()
 	r.Use(loggingMiddleware)
-
-	// templated pages
-	r.HandleFunc("/", indexHandler)
-	r.HandleFunc("/all", allHandler)
 
 	// "api" endpoints
 	r.HandleFunc("/talks", talksHandler)
@@ -58,7 +53,11 @@ func main() {
 	r.HandleFunc("/health", healthHandler)
 
 	// static files
-	r.PathPrefix("/").Handler(http.FileServer(http.Dir("static")))
+	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("static"))))
+
+	// templated pages
+	r.HandleFunc("/", indexHandler)
+	r.HandleFunc("/{week:[0-9]{8}}", weekHandler)
 
 	// Set up server listen address
 	listenAddr, exists := os.LookupEnv("LISTEN")
@@ -69,7 +68,7 @@ func main() {
 	// Set up server port
 	port, exists := os.LookupEnv("PORT")
 	if !exists {
-		port = "5000"
+		port = "5001"
 	}
 
 	// Create http server
@@ -90,6 +89,6 @@ func main() {
 	go hub.run()
 
 	// Start server
-	log.Println("Web server is now listening for connections on", srv.Addr)
+	log.Println("[INFO] Web server is now listening for connections on http://localhost:" + port)
 	log.Fatal(srv.ListenAndServe())
 }

@@ -82,7 +82,7 @@ func ConnectDB(dbType string) error {
 			if err != nil {
 				if i != attempts {
 					log.Printf(
-						"WARNING: Could not connect to db on attempt %d. Trying again in %d seconds.\n",
+						"[WARN]: Could not connect to db on attempt %d. Trying again in %d seconds.\n",
 						i,
 						timeout,
 					)
@@ -95,8 +95,10 @@ func ConnectDB(dbType string) error {
 				break
 			}
 		}
-		log.Println("Connection to db succeeded!")
+		log.Println("[INFO] Connection to db succeeded!")
 	}
+	// enable logging for gorm db
+
 	return nil
 }
 
@@ -114,12 +116,16 @@ func DropTables() {
 	DB.Migrator().DropTable(&Talk{})
 }
 
-func VisibleTalks() []Talk {
+func VisibleTalks(week string) []Talk {
+	if week == "" {
+		week = nextWednesday()
+	}
+
 	var talks []Talk
-	result := DB.Where("is_hidden = false").Order("type").Find(&talks)
+	result := DB.Where("is_hidden = false").Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
-		log.Println("ERROR", result)
+		log.Println("[WARN]", result)
 	}
 
 	return talks
@@ -130,7 +136,7 @@ func AllTalks() []Talk {
 	result := DB.Find(&talks)
 
 	if result.Error != nil {
-		log.Println("ERROR", result)
+		log.Println("[WARN]", result)
 	}
 
 	return talks
@@ -140,7 +146,7 @@ func CreateTalk(talk *Talk) {
 	result := DB.Create(talk)
 
 	if result.Error != nil {
-		log.Println("ERROR", result)
+		log.Println("[WARN]", result)
 	}
 }
 
@@ -149,13 +155,13 @@ func HideTalk(id uint32) {
 	result := DB.First(&talk, id)
 
 	if result.Error != nil {
-		log.Println("ERROR", result)
+		log.Println("[WARN]", result)
 	}
 
 	talk.IsHidden = true
 	result = DB.Save(&talk)
 
 	if result.Error != nil {
-		log.Println("ERROR", result)
+		log.Println("[WARN]", result)
 	}
 }

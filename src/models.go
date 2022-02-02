@@ -20,12 +20,12 @@ func (tt TalkType) String() string {
 }
 
 type Talk struct {
-	Id          uint32   `gorm:"AUTO_INCREMENT, primary key"`
-	Name        string   `gorm:"not null"`
-	Type        TalkType `gorm:"not null"`
-	Description string   `gorm:"not null"`
-	IsHidden    bool     `gorm:"not null"`
-	Week        uint32   `gorm:"index, not null"`
-	Order       uint32   `gorm:"not null"`
-	CreatedAt   time.Time
+	Id          uint32    `gorm:"AUTO_INCREMENT, primary key" json:"id"`
+	Name        string    `gorm:"not null" json:"name"`
+	Type        TalkType  `gorm:"not null" json:"type"`
+	Description string    `gorm:"not null" json:"description"`
+	IsHidden    bool      `gorm:"not null" json:"-"`
+	Week        string    `gorm:"index, not null" json:"-"`
+	Order       uint32    `gorm:"not null" json:"-"`
+	CreatedAt   time.Time `json:"-"`
 }

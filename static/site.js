@@ -54,7 +54,8 @@ function create() {
         type: 0,
         name: name,
         description: description,
-        talktype: parseInt(talktype)
+        talktype: parseInt(talktype),
+        week: week
     };
 
     json = JSON.stringify(data);
@@ -93,13 +94,19 @@ function hideTalk(id) {
         }
     }
 
-    // Remove the row
-    table.removeChild(rowToRemove);
+    if (rowToRemove) {
+        // Remove the row
+        table.removeChild(rowToRemove);
+    }
 }
-
 
 // {"type":0,"name":"b","description":"b","talktype":0}
 function addTalk(talk) {
+    if (talk.week != week) {
+        console.log("Skipping new talk because it is for a different week", talk.week);
+        return
+    }
+
     const table = document.getElementById("tb");
     const rows = document.getElementById('tb').children;
 
