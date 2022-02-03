@@ -25,14 +25,12 @@ func (hub *Hub) countConnections() int {
 	return connections
 }
 
-func processMessage(message Message) bool {
+func processMessage(message *Message) bool {
 	switch message.Type {
 	case NEW:
 		if message.Week == "" {
 			message.Week = nextWednesday()
 		}
-
-		log.Println("[INFO] Create talk {", message.Name, message.Description, message.Talktype, message.Week, "}")
 
 		// You can not create a talk for a previous meeting
 		if isPast(nextWednesday(), message.Week) {
@@ -62,7 +60,7 @@ func processMessage(message Message) bool {
 		// TODO: Talk order
 		talk.Order = 0
 
-		CreateTalk(talk)
+		message.Id = CreateTalk(talk)
 	case HIDE:
 		log.Println("[INFO] Hide talk {", message.Id, "}")
 		HideTalk(message.Id)
@@ -88,7 +86,7 @@ func (hub *Hub) run() {
 			log.Println("[INFO] Unregistered client", client.conn.RemoteAddr())
 		case message := <-hub.broadcast:
 			// broadcasts the message to all clients (including the one that sent the message)
-			if !processMessage(message) {
+			if !processMessage(&message) {
 				log.Println("[WARN] Invalid message")
 			}
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -78,7 +79,7 @@ func AllTalks(week string) []Talk {
 	return talks
 }
 
-func CreateTalk(talk *Talk) {
+func CreateTalk(talk *Talk) uint32 {
 	DB_LOCK.Lock()
 	defer DB_LOCK.Unlock()
 
@@ -87,6 +88,9 @@ func CreateTalk(talk *Talk) {
 	if result.Error != nil {
 		log.Println("[WARN]", result)
 	}
+
+	fmt.Println("[INFO] Created talk {", talk.Name, talk.Description, talk.Type, talk.Week, talk.Id, "}")
+	return talk.Id
 }
 
 func HideTalk(id uint32) {
