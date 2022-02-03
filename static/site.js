@@ -1,3 +1,5 @@
+var socket = connect()
+
 // Connects to the websocket endpoint
 function connect() {
     var ws_scheme = window.location.protocol == "https:" ? "wss://" : "ws://";
@@ -20,6 +22,7 @@ function connect() {
     };
     socket.onclose = function(e) {
         console.log("Disconnected!", e);
+        socket = connect();
     };
     socket.onerror = function(e) {
         console.log("Error!", e);
@@ -163,5 +166,3 @@ function addTalk(talk) {
     c4.setAttribute("class", "actions");
     c4.innerHTML = '<button onclick="hide(' + talk.id + ')"> x </button>';
 }
-
-var socket = connect();
