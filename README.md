@@ -43,25 +43,3 @@ gin -d src -x talks.db -b main -a 3001 -i
 ```
 
 TODO: MOVE TALKS
-
-**Authenticate** (must be sent before you can change talk states)
-```json
-{
-    "type": 4,
-    "password": "password",
-}
-```
-If the password is correct the server sends back 
-```json
-{
-    "type": 4,
-    "status": 200,
-}
-```
-otherwise
-```json
-{
-    "type": 4,
-    "status": 403,
-}
-```

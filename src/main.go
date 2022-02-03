@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
 )
 
@@ -36,7 +37,7 @@ func main() {
 	talks_password = os.Getenv("TALKS_PASSWORD")
 
 	// Connect to the database
-	err = ConnectDB("sqlite")
+	err = ConnectDB()
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to connect to the database", err)
 	}
@@ -96,6 +97,10 @@ func main() {
 		unregister: make(chan *Client),
 	}
 	go hub.run()
+
+	// Schedule backup tasks
+	s := gocron.NewScheduler(TZ)
+	s.Wednesday().At("23:59").Do(backup)
 
 	// Start server
 	log.Println("[INFO] Web server is now listening for connections on http://localhost:" + port)
