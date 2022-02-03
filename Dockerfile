@@ -13,7 +13,6 @@ RUN go build -o server
 FROM debian:latest
 
 WORKDIR /srv/website
-EXPOSE 5000
 
 RUN apt-get update -y && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get install curl -y
 
