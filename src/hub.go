@@ -39,28 +39,36 @@ func processMessage(message Message) bool {
 			return false
 		}
 
+		// Validate talk type
 		talk := &Talk{}
 		if *message.Talktype > 4 {
 			return false
 		}
 		talk.Type = *message.Talktype
 
+		// Validate talk description
 		if message.Description == "" {
 			return false
 		}
 		talk.Description = message.Description
 
+		// Validate talk name
 		if message.Name == "" {
 			return false
 		}
 		talk.Name = message.Name
 		talk.Week = message.Week
+
+		// TODO: Talk order
 		talk.Order = 0
 
 		CreateTalk(talk)
 	case HIDE:
 		log.Println("[INFO] Hide talk {", message.Id, "}")
 		HideTalk(message.Id)
+	case DELETE:
+		log.Println("[INFO] Delete talk {", message.Id, "}")
+		DeleteTalk(message.Id)
 	}
 
 	return false

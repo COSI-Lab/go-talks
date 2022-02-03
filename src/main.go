@@ -15,6 +15,8 @@ var talks_password = ""
 var hub Hub
 var tmpls *template.Template
 
+var TZ *time.Location
+
 // Logs request Method and request URI
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -24,10 +26,17 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
+	var err error
+	TZ, err = time.LoadLocation("America/New_York")
+
+	if err != nil {
+		log.Fatalln("[ERROR] Failed to load timezone:", err)
+	}
+
 	talks_password = os.Getenv("TALKS_PASSWORD")
 
 	// Connect to the database
-	err := ConnectDB("sqlite")
+	err = ConnectDB("sqlite")
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to connect to the database", err)
 	}

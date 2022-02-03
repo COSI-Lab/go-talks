@@ -97,7 +97,6 @@ func ConnectDB(dbType string) error {
 		}
 		log.Println("[INFO] Connection to db succeeded!")
 	}
-	// enable logging for gorm db
 
 	return nil
 }
@@ -122,7 +121,7 @@ func VisibleTalks(week string) []Talk {
 	}
 
 	var talks []Talk
-	result := DB.Where("is_hidden = false").Where("week = ?", week).Order("type").Find(&talks)
+	result := DB.Where("is_hidden = true").Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
 		log.Println("[WARN]", result)
@@ -131,9 +130,13 @@ func VisibleTalks(week string) []Talk {
 	return talks
 }
 
-func AllTalks() []Talk {
+func AllTalks(week string) []Talk {
+	if week == "" {
+		week = nextWednesday()
+	}
+
 	var talks []Talk
-	result := DB.Find(&talks)
+	result := DB.Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
 		log.Println("[WARN]", result)
@@ -160,6 +163,21 @@ func HideTalk(id uint32) {
 
 	talk.IsHidden = true
 	result = DB.Save(&talk)
+
+	if result.Error != nil {
+		log.Println("[WARN]", result)
+	}
+}
+
+func DeleteTalk(id uint32) {
+	talk := Talk{}
+	result := DB.First(&talk, id)
+
+	if result.Error != nil {
+		log.Println("[WARN]", result)
+	}
+
+	result = DB.Delete(&talk)
 
 	if result.Error != nil {
 		log.Println("[WARN]", result)

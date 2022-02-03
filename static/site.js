@@ -13,7 +13,7 @@ function connect() {
         if (data.type == 0) {
             // Add the talk to the table
             addTalk(data);
-        } else if (data.type == 1) {
+        } else if (data.type == 1 || data.type == 2) {
             // Hide the talk from the table
             hideTalk(data.id);
         }
@@ -26,6 +26,24 @@ function connect() {
     };
  
     return socket;
+}
+
+function del(id) {
+    confirmed = confirm("Are you sure you want to delete this talk? THIS CANNOT BE UNDONE");
+
+    if (!confirmed) {
+        return;
+    }
+
+    const data = {
+        type: 2,
+        id: id
+    }    
+
+    json = JSON.stringify(data);
+    console.log(`Sending: ${json}`);
+
+    socket.send(json);
 }
 
 function hide(id) {

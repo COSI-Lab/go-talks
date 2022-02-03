@@ -23,7 +23,7 @@ func isInSubnet(ip net.IP) bool {
 // If today is a wednesday today's date is returned
 func nextWednesday() string {
 	const format = "20060102"
-	now := time.Now()
+	now := time.Now().In(TZ)
 
 	daysUntilWednesday := time.Wednesday - now.Weekday()
 
@@ -38,7 +38,7 @@ func nextWednesday() string {
 
 func addWeek(week string) string {
 	const format = "20060102"
-	t, err := time.Parse(format, week)
+	t, err := time.ParseInLocation(format, week, TZ)
 
 	if err != nil {
 		log.Fatalln("Failed to parse week:", err)
@@ -49,7 +49,7 @@ func addWeek(week string) string {
 
 func subtractWeek(week string) string {
 	const format = "20060102"
-	t, err := time.Parse(format, week)
+	t, err := time.ParseInLocation(format, week, TZ)
 
 	if err != nil {
 		log.Fatalln("Failed to parse week:", err)
@@ -60,7 +60,7 @@ func subtractWeek(week string) string {
 
 func weekForHumans(week string) (string, error) {
 	const format = "20060102"
-	t, err := time.Parse(format, week)
+	t, err := time.ParseInLocation(format, week, TZ)
 
 	if err != nil {
 		return "", err
@@ -71,13 +71,13 @@ func weekForHumans(week string) (string, error) {
 
 func isPast(current, week string) bool {
 	const format = "20060102"
-	currentTime, err := time.Parse(format, current)
+	currentTime, err := time.ParseInLocation(format, current, TZ)
 
 	if err != nil {
 		log.Fatalln("Failed to parse week:", err)
 	}
 
-	weekTime, err := time.Parse(format, week)
+	weekTime, err := time.ParseInLocation(format, week, TZ)
 
 	if err != nil {
 		log.Fatalln("Failed to parse week:", err)
