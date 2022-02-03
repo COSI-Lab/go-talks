@@ -51,7 +51,7 @@ func VisibleTalks(week string) []Talk {
 	}
 
 	var talks []Talk
-	result := DB.Where("is_hidden = true").Where("week = ?", week).Order("type").Find(&talks)
+	result := DB.Where("is_hidden = false").Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
 		log.Println("[WARN]", result)
