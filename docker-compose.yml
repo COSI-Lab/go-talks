@@ -10,7 +10,7 @@ services:
     volumes:
       - ./talks.db:/srv/website/talks.db
     environment:
-      VIRTUAL_PORT: 8001
+      VIRTUAL_PORT: 8011
       VIRTUAL_HOST: talks.cosi.clarkson.edu,talks.cslabs.clarkson.edu,talks
       LETSENCRYPT_HOST: talks.cosi.clarkson.edu,talks.cslabs.clarkson.edu
 
