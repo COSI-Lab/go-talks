@@ -1,3 +1,11 @@
+// Resize text area
+window.onload = function() {
+    document.getElementById("description").addEventListener("input", (e) => {
+        e.target.style.height = "auto";
+        e.target.style.height = (e.target.scrollHeight) + "px";
+    })
+}
+
 var socket = connect()
 
 // Connects to the websocket endpoint
@@ -159,7 +167,7 @@ function addTalk(talk) {
     c2.innerHTML = typeToString[talk.talktype];
 
     var c3 = row.insertCell(3);
-    c3.setAttribute("class", "desc");
+    c3.setAttribute("class", "description");
     c3.innerHTML = talk.description;
 
     var c4 = row.insertCell(4);

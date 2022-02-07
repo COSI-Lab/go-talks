@@ -26,26 +26,44 @@ body {
     transform: scale(1.1); 
 }
 
-h1 {
+.header h1 {
     text-align: center;
     font-size: 48px;
     margin-bottom: 0;
 }
   
-h3 {
+.header h3 {
     text-align: center;
     font-size: 24px;
 }
 
-h5 {
-    text-align: center;
-    font-size: 16px;
-    font-weight: bolder;
-}
-  
-a {
+.header a {
     text-decoration: none;
     color: #e4e4e4;
+}
+
+textarea {
+    width: 75%;
+    overflow-y: auto;
+}
+
+.hiddendiv {
+    display: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.description * {
+    margin: 0;
+}
+
+.description pre {
+    text-align: left;
+    margin-left: 10%;
+}
+
+.description del {
+    text-decoration-thickness: 2px;
 }
 
 table {
@@ -98,8 +116,4 @@ table td button {
     display: inline;
     float: right;
     margin: 0 2px;
-}
-
-input {
-    width: 75%;
 }

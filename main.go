@@ -10,6 +10,8 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
+	"github.com/microcosm-cc/bluemonday"
+	"github.com/russross/blackfriday"
 )
 
 var talks_password = ""
@@ -45,8 +47,8 @@ func main() {
 	// Set up all tables
 	MakeDB()
 
-	// Load templates
-	tmpls, err = template.ParseGlob("templates/*")
+	// Load templates with markdown func
+	tmpls = template.Must(template.New("").Funcs(template.FuncMap{"markdown": markDowner}).ParseGlob("templates/*.gohtml"))
 
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to compile some template(s)", err)
@@ -106,4 +108,11 @@ func main() {
 	// Start server
 	log.Println("[INFO] Web server is now listening for connections on http://localhost:" + port)
 	log.Fatal(srv.ListenAndServe())
+}
+
+// Processes the markdown and returns the html
+func markDowner(args ...interface{}) template.HTML {
+	s := blackfriday.MarkdownCommon([]byte(fmt.Sprintf("%s", args...)))
+	santize := bluemonday.UGCPolicy().SanitizeBytes(s)
+	return template.HTML(santize)
 }

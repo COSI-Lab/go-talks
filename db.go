@@ -94,6 +94,8 @@ func CreateTalk(talk *Talk) uint32 {
 }
 
 func HideTalk(id uint32) {
+	// TODO if it's before the meeting start time delete the talk instead
+
 	DB_LOCK.Lock()
 	defer DB_LOCK.Unlock()
 

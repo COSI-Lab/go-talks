@@ -7,12 +7,14 @@
         <script type="text/javascript" src="static/site.js"></script>
     </head>
     <body>
-        <h1><a href="/"> Talks </a> </h1>
-        <h3>Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
-        <div class="week">
-            <a class="grow" href="/{{.PrevWeek}}"> ⬅️ </a>
-            <span class="grow"> Wed. {{.HumanWeek}} at 7pm </span>
-            <a class="grow" href="/{{.NextWeek}}"> ➡️ </a>
+        <div class="header">
+            <h1 class="talks"><a class="talks" href="/"> Talks </a> </h1>
+            <h3 class="talks">Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
+            <div class="week">
+                <a class="grow" href="/{{.PrevWeek}}"> ⬅️ </a>
+                <span class="grow"> Wed. {{.HumanWeek}} at 7pm </span>
+                <a class="grow" href="/{{.NextWeek}}"> ➡️ </a>
+            </div>
         </div>
         <br>
         <table id="table">
@@ -32,7 +34,7 @@
                     <td style="display: none;"> {{.Id}} </td>
                     <td class="name"> {{.Name}} </td>
                     <td class="type"> {{.Type}} </td>
-                    <td class="description"> {{.Description}} </td>
+                    <td class="description"> {{.Description | markdown}} </td>
                     <td class="actions">
                         <button onclick='del( {{ .Id }} )' > x </button>
                     </td>

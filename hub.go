@@ -50,6 +50,9 @@ func processMessage(message *Message) bool {
 		}
 		talk.Description = message.Description
 
+		// Update the message's description
+		message.Description = string(markDowner(message.Description))
+
 		// Validate talk name
 		if message.Name == "" {
 			return false
