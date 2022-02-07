@@ -58,7 +58,8 @@ func main() {
 	r.Use(loggingMiddleware)
 
 	// "api" endpoints
-	r.HandleFunc("/talks", talksHandler)
+	r.HandleFunc("/talks", indexTalksHandler)
+	r.HandleFunc("/{week:[0-9]{8}}/talks", talksHandler)
 	r.HandleFunc("/ws", socketHandler)
 	r.HandleFunc("/health", healthHandler)
 

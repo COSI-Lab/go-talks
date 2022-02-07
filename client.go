@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -94,14 +95,26 @@ func (c *Client) write() {
 		c.conn.Close()
 	}()
 
-	for message := range c.send {
-		w, err := c.conn.NextWriter(websocket.TextMessage)
-		if err != nil {
-			log.Printf("error: %v", err)
-			break
-		}
+	ticker := time.NewTicker(30 * time.Second)
 
-		w.Write(message)
-		w.Close()
+	for {
+		select {
+		case message, ok := <-c.send:
+			if !ok {
+				return
+			}
+
+			err := c.conn.WriteMessage(websocket.TextMessage, message)
+			if err != nil {
+				log.Printf("error: %v", err)
+				return
+			}
+		case <-ticker.C:
+			err := c.conn.WriteMessage(websocket.PingMessage, []byte{})
+			if err != nil {
+				log.Printf("error: %v", err)
+				return
+			}
+		}
 	}
 }

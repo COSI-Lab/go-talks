@@ -10,9 +10,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{} // TODO: Don't use default options
+var upgrader = websocket.Upgrader{}
 
-type Response struct {
+type TemplateResponse struct {
 	Talks     []Talk
 	HumanWeek string
 	Week      string
@@ -28,7 +28,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Prepare response
 	talks := VisibleTalks(week)
-	res := Response{Talks: talks, Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
+	res := TemplateResponse{Talks: talks, Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
 
 	// Render the template
 	err := tmpls.ExecuteTemplate(w, "future.gohtml", res)
@@ -46,14 +46,14 @@ func weekHandler(w http.ResponseWriter, r *http.Request) {
 	human, err := weekForHumans(week)
 
 	if err != nil {
-		log.Println("[WARN]", err)
-		http.NotFound(w, r)
+		log.Println("[INFO]", err)
+		w.WriteHeader(400)
 		return
 	}
 
 	// Prepare response
 	talks := VisibleTalks(week)
-	res := Response{Talks: talks, Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
+	res := TemplateResponse{Talks: talks, Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
 
 	// Render the template
 	if isPast(nextWednesday(), week) {
@@ -67,11 +67,45 @@ func weekHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func talksHandler(w http.ResponseWriter, r *http.Request) {
-	talks := VisibleTalks("")
+func indexTalksHandler(w http.ResponseWriter, r *http.Request) {
+	week := nextWednesday()
+
+	// Validate week and get human readable version
+	_, err := weekForHumans(week)
+
+	if err != nil {
+		log.Println("[INFO]", err)
+		w.WriteHeader(400)
+		return
+	}
+
+	talks := AllTalks(week)
 
 	// Parse talks as JSON
-	err := json.NewEncoder(w).Encode(talks)
+	err = json.NewEncoder(w).Encode(talks)
+	if err != nil {
+		log.Println("[WARN]", err)
+	}
+}
+
+// /{week:[0-9]{8}}/talks returns json of talks for a given week
+func talksHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	week := vars["week"]
+
+	// Validate week and get human readable version
+	_, err := weekForHumans(week)
+
+	if err != nil {
+		log.Println("[INFO]", err)
+		w.WriteHeader(400)
+		return
+	}
+
+	talks := AllTalks(week)
+
+	// Parse talks as JSON
+	err = json.NewEncoder(w).Encode(talks)
 	if err != nil {
 		log.Println("[WARN]", err)
 	}
