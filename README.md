@@ -4,6 +4,8 @@ Another rewrite of talks, this time in go.
 
 go-talks (Or more commonly known as just Talks) is an app to manage talks at COSI meetings. It allows people to submit talks that they are planning on giving at upcoming meetings.
 
+![](talkspreview.png)
+
 ## Development
 
 **Auto reload:**
