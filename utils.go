@@ -85,3 +85,7 @@ func isPast(current, week string) bool {
 
 	return currentTime.After(weekTime)
 }
+
+func DuringMeeting() bool {
+	return time.Now().In(TZ).Weekday() == time.Wednesday && time.Now().In(TZ).Hour() >= 19
+}

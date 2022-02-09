@@ -50,7 +50,7 @@ func processMessage(message *Message) bool {
 		}
 		talk.Description = message.Description
 
-		// Update the message's description
+		// Update the message's description to be markdowned
 		message.Description = string(markDowner(message.Description))
 
 		// Validate talk name
@@ -65,8 +65,14 @@ func processMessage(message *Message) bool {
 
 		message.Id = CreateTalk(talk)
 	case HIDE:
-		log.Println("[INFO] Hide talk {", message.Id, "}")
-		HideTalk(message.Id)
+		// Only hide talks during meetings, otherwise delete them
+		if !DuringMeeting() {
+			log.Println("[INFO] Delete talk {", message.Id, "}")
+			DeleteTalk(message.Id)
+		} else {
+			log.Println("[INFO] Hide talk {", message.Id, "}")
+			HideTalk(message.Id)
+		}
 	case DELETE:
 		log.Println("[INFO] Delete talk {", message.Id, "}")
 		DeleteTalk(message.Id)

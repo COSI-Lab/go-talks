@@ -50,7 +50,7 @@ func (c *Client) read() {
 		// Read from the connection
 		_, raw, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Printf("error: %v", err)
+			log.Printf("[ERROR] %v", err)
 			break
 		}
 
@@ -106,13 +106,13 @@ func (c *Client) write() {
 
 			err := c.conn.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
-				log.Printf("error: %v", err)
+				log.Printf("[ERROR] %v", err)
 				return
 			}
 		case <-ticker.C:
 			err := c.conn.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
-				log.Printf("error: %v", err)
+				log.Printf("[ERROR] %v", err)
 				return
 			}
 		}
