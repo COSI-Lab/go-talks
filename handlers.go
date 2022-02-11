@@ -52,13 +52,14 @@ func weekHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Prepare response
-	talks := VisibleTalks(week)
-	res := TemplateResponse{Talks: talks, Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
+	res := TemplateResponse{Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
 
 	// Render the template
 	if isPast(nextWednesday(), week) {
+		res.Talks = AllTalks(week)
 		err = tmpls.ExecuteTemplate(w, "past.gohtml", res)
 	} else {
+		res.Talks = VisibleTalks(week)
 		err = tmpls.ExecuteTemplate(w, "future.gohtml", res)
 	}
 
