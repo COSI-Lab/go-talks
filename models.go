@@ -16,7 +16,7 @@ func (tt TalkType) String() string {
 	if tt > 4 {
 		return "unknown"
 	}
-	return []string{"forum topic", "lightning talk", "project update", "announcment", "after meeting slot"}[tt]
+	return []string{"forum topic", "lightning talk", "project update", "announcement", "after meeting slot"}[tt]
 }
 
 type Talk struct {

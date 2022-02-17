@@ -59,7 +59,7 @@ func main() {
 	r := mux.NewRouter()
 	r.Use(loggingMiddleware)
 
-	// "api" endpoints
+	// "api" json encoded endpoints
 	r.HandleFunc("/talks", indexTalksHandler)
 	r.HandleFunc("/{week:[0-9]{8}}/talks", talksHandler)
 	r.HandleFunc("/ws", socketHandler)

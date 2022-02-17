@@ -3,8 +3,8 @@ github.com/aymerick/douceur v0.2.0/go.mod h1:wlT5vV2O3h55X9m7iVYN0TBM0NH/MmbLnd3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/go-co-op/gocron v1.11.0 h1:ujOMubCpGcTxnnR/9vJIPIEpgwuAjbueAYqJRNr+nHg=
-github.com/go-co-op/gocron v1.11.0/go.mod h1:qtlsoMpHlSdIZ3E/xuZzrrAbeX3u5JtPvWf2TcdutU0=
+github.com/go-co-op/gocron v1.12.0 h1:RahikbAIhp/wlNBraICMZfby7bdkeCXe+QQSW323Lpo=
+github.com/go-co-op/gocron v1.12.0/go.mod h1:qtlsoMpHlSdIZ3E/xuZzrrAbeX3u5JtPvWf2TcdutU0=
 github.com/gorilla/css v1.0.0 h1:BQqNyPTi50JCFMTw/b67hByjMVXZRwGha6wxVGkeihY=
 github.com/gorilla/css v1.0.0/go.mod h1:Dn721qIggHpt4+EFCcTLTU/vk5ySda2ReITrtgBl60c=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
