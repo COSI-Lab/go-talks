@@ -111,6 +111,11 @@ table tbody .event .description {
     width: 45%;
 }
 
+table tbody .event .description img {
+    display: inline-block;
+    max-width: 100%;
+}
+
 table td button {
     background-color: #78909c;
     color: white;

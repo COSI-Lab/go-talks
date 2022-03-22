@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"sync"
 
@@ -89,7 +88,7 @@ func CreateTalk(talk *Talk) uint32 {
 		log.Println("[WARN]", result)
 	}
 
-	fmt.Println("[INFO] Created talk {", talk.Name, talk.Description, talk.Type, talk.Week, talk.Id, "}")
+	log.Println("[INFO] Created talk {", talk.Name, talk.Description, talk.Type, talk.Week, talk.Id, "}")
 	return talk.Id
 }
 

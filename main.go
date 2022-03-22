@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
+	"golang.org/x/net/html"
 )
 
 var talks_password = ""
@@ -36,7 +38,10 @@ func main() {
 		log.Fatalln("[ERROR] Failed to load timezone:", err)
 	}
 
-	talks_password = os.Getenv("TALKS_PASSWORD")
+	// talks_password = os.Getenv("TALKS_PASSWORD")
+	// if talks_password == "" {
+	// 	log.Fatalln("[ERROR] TALKS_PASSWORD environment variable is not set")
+	// }
 
 	// Connect to the database
 	err = ConnectDB()
@@ -64,6 +69,7 @@ func main() {
 	r.HandleFunc("/{week:[0-9]{8}}/talks", talksHandler)
 	r.HandleFunc("/ws", socketHandler)
 	r.HandleFunc("/health", healthHandler)
+	r.HandleFunc("/img/{id}", imageHandler)
 
 	// static files
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("static"))))
@@ -110,9 +116,17 @@ func main() {
 	log.Fatal(srv.ListenAndServe())
 }
 
-// Processes the markdown and returns the html
+// markDowner content as markdown and returns the html
+// it will proxy any img tags to protect users from ip-grabbers
 func markDowner(args ...interface{}) template.HTML {
+	// Compile markdown
 	s := blackfriday.MarkdownCommon([]byte(fmt.Sprintf("%s", args...)))
-	santize := bluemonday.UGCPolicy().SanitizeBytes(s)
-	return template.HTML(santize)
+	santized := bluemonday.UGCPolicy().SanitizeBytes(s)
+
+	// Proxy any images and re-render the html
+	doc, _ := html.Parse(bytes.NewReader(santized))
+	findImagesAndCacheThem(doc)
+	var buf bytes.Buffer
+	html.Render(&buf, doc)
+	return template.HTML(buf.String())
 }

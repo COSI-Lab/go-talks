@@ -112,6 +112,27 @@ func talksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// /img/{id}
+func imageHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	// Lock the cache
+	cacheLock.RLock()
+	defer cacheLock.RUnlock()
+
+	// Get the image from the cache
+	image, ok := cache[id]
+	if !ok {
+		w.WriteHeader(404)
+		return
+	}
+
+	// Write the image to the response
+	w.Header().Set("Content-Type", image.ContentType)
+	w.Write(image.Data)
+}
+
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	// Return list of active clients for diagnostic purposes
 	w.WriteHeader(200)
