@@ -6,6 +6,15 @@ go-talks (Or more commonly known as just Talks) is an app to manage talks at COS
 
 ![](talkspreview.png)
 
+## Features:
+
+- Live updating over websockets
+- The page will load without Javascript
+- Markdown support
+- Image proxying (safe from ip grabbers and trackers)
+- Create future talks and view historic talks
+- Backed by SQLITE database
+
 ## Endpoints
 
 | Request | Endpoint           | Desc                                             |
