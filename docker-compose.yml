@@ -7,11 +7,5 @@ services:
     env_file: .env
     volumes:
       - ./talks.db:/srv/website/talks.db
-    environment:
-      VIRTUAL_PORT: 5000
-      VIRTUAL_HOST: talks.cosi.clarkson.edu,talks.cslabs.clarkson.edu,talks
-      LETSENCRYPT_HOST: talks.cosi.clarkson.edu,talks.cslabs.clarkson.edu
-
-networks:
-  default:
-    name: nginx-proxy
+    ports:
+      - 8000:80
