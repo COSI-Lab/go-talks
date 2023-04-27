@@ -123,3 +123,13 @@ table td button {
     float: right;
     margin: 0 2px;
 }
+
+footer {
+    display:block;
+    text-align: center;
+}
+
+footer a {
+    color:white;
+    text-decoration: underline;
+}

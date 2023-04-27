@@ -1,66 +1,74 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Talks</title>
-        <link rel="stylesheet" type="text/css" href="static/style.css">
-        <script> const week = {{.Week}}</script>
-        <script type="text/javascript" src="static/site.js"></script>
-    </head>
-    <body>
-        <div class="header">
-            <h1 class="talks"><a class="talks" href="/"> Talks </a> </h1>
-            <h3 class="talks">Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
-            <div class="week">
-                <a class="grow" href="/{{.PrevWeek}}"> ⬅️ </a>
-                <span class="grow"> Wed. {{.HumanWeek}} at 7pm </span>
-                <a class="grow" href="/{{.NextWeek}}"> ➡️ </a>
-            </div>
-        </div>
-        <br>
-        <table id="table">
-            <thead>
-                <tr>
-                    <th style="display: none;"></th>
-                    <th>Talk Presenter</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th></th>
-                </tr>
-            </thead>
 
-            <tbody id="tb">
-                {{ range .Talks }}
-                <tr class="event">
-                    <td style="display: none;"> {{.Id}} </td>
-                    <td class="name"> {{.Name}} </td>
-                    <td class="type"> {{.Type}} </td>
-                    <td class="description"> {{.Description | markdown}} </td>
-                    <td class="actions">
-                        <button onclick='hide( {{ .Id }} )' > x </button>
-                    </td>
-                </tr>
-                {{ end }}
-                <tr>
-                    <th>
-                        <input id="name" type="text" placeholder="Name" value="" autocomplete="off">
-                    </th>
-                    <th>
-                        <select id="type">
-                            <option value=0>Forum Topic</option>
-                            <option value=1>Lightning Talk</option>
-                            <option value=2>Project Update</option>
-                            <option value=3>Announcement</option>
-                            <option value=4>After-Meeting Slot</option>
-                        </select>
-                    </th>
-                    <th>
-                        <textarea id="description" autocomplete="off" rows=1></textarea>
-                    </th>
-                    <th>
-                        <button id="create" onclick="create()"> create </button>
-                    </th>
-                </tr>
-            </tbody>
-        </table>
-    </body>
+<head>
+    <title>Talks</title>
+    <link rel="stylesheet" type="text/css" href="static/style.css">
+    <script> const week = {{.Week }}</script>
+    <script type="text/javascript" src="static/site.js"></script>
+</head>
+
+<body>
+    <div class="header">
+        <h1 class="talks"><a class="talks" href="/"> Talks </a> </h1>
+        <h3 class="talks">Upcoming Events For The Clarkson Open Source Institute Meetings</h3>
+        <div class="week">
+            <a class="grow" href="/{{.PrevWeek}}"> ⬅️ </a>
+            <span class="grow"> Wed. {{.HumanWeek}} at 7pm </span>
+            <a class="grow" href="/{{.NextWeek}}"> ➡️ </a>
+        </div>
+    </div>
+    <br>
+    <table id="table">
+        <thead>
+            <tr>
+                <th style="display: none;"></th>
+                <th>Talk Presenter</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody id="tb">
+            {{ range .Talks }}
+            <tr class="event">
+                <td style="display: none;"> {{.Id}} </td>
+                <td class="name"> {{.Name}} </td>
+                <td class="type"> {{.Type}} </td>
+                <td class="description"> {{.Description | markdown}} </td>
+                <td class="actions">
+                    <button onclick='hide( {{ .Id }} )'> x </button>
+                </td>
+            </tr>
+            {{ end }}
+            <tr>
+                <th>
+                    <input id="name" type="text" placeholder="Name" value="" autocomplete="off">
+                </th>
+                <th>
+                    <select id="type">
+                        <option value=0>Forum Topic</option>
+                        <option value=1>Lightning Talk</option>
+                        <option value=2>Project Update</option>
+                        <option value=3>Announcement</option>
+                        <option value=4>After-Meeting Slot</option>
+                    </select>
+                </th>
+                <th>
+                    <textarea id="description" autocomplete="off" rows=1></textarea>
+                </th>
+                <th>
+                    <button id="create" onclick="create()"> create </button>
+                </th>
+            </tr>
+        </tbody>
+    </table>
+    <footer>
+        <b>
+            <a href="https://github.com/COSI-Lab/go-talks">Github Repository</a>
+        </b>
+    </footer>
+</body>
+
 </html>
