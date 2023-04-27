@@ -6,6 +6,9 @@
 }
 
 body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     margin: 0;
     padding: 0;
     background-color: #78909c;
@@ -125,11 +128,13 @@ table td button {
 }
 
 footer {
+    margin-top: auto;
+    padding-bottom: 10px;
     display:block;
     text-align: center;
 }
 
 footer a {
     color:white;
-    text-decoration: underline;
+    text-decoration: none;
 }
