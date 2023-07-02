@@ -121,10 +121,10 @@ func main() {
 func markDowner(args ...interface{}) template.HTML {
 	// Compile markdown
 	s := blackfriday.MarkdownCommon([]byte(fmt.Sprintf("%s", args...)))
-	santized := bluemonday.UGCPolicy().SanitizeBytes(s)
+	sanitized := bluemonday.UGCPolicy().SanitizeBytes(s)
 
 	// Proxy any images and re-render the html
-	doc, _ := html.Parse(bytes.NewReader(santized))
+	doc, _ := html.Parse(bytes.NewReader(sanitized))
 	findImagesAndCacheThem(doc)
 	var buf bytes.Buffer
 	html.Render(&buf, doc)

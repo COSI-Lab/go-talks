@@ -150,7 +150,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	client := &Client{conn: conn, send: make(chan []byte)}
 	hub.register <- client
 
-	// Run send and recieve in goroutines
+	// Run send and receive in goroutines
 	go client.write()
 	go client.read()
 }

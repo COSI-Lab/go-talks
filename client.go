@@ -15,7 +15,7 @@ type Client struct {
 	// Outbound messages
 	send chan []byte
 
-	// Marks the client as autheniticated
+	// Marks the client as authenticated
 	auth bool
 }
 
@@ -84,7 +84,7 @@ func (c *Client) read() {
 			continue
 		}
 
-		// Foward all other message to be processed and broadcasted to other client
+		// Forward all other message to be processed and broadcasted to other client
 		hub.broadcast <- message
 	}
 }
