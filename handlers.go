@@ -192,8 +192,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	go client.read()
 
 	// Send an authentication response
-	message, _ := json.Marshal(Message{Type: AUTH, Status: authenticated})
-	client.send <- message
+	client.send <- authenticatedMessage(authenticated)
 }
 
 type Post struct {

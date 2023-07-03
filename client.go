@@ -30,13 +30,20 @@ const (
 
 type Message struct {
 	Type        MessageType `json:"type"`
-	Status      bool        `json:"status,omitempty"` // For AUTH
 	Id          uint32      `json:"id,omitempty"`
 	Password    string      `json:"password,omitempty"`
 	Name        string      `json:"name,omitempty"`
 	Talktype    *TalkType   `json:"talktype,omitempty"`
 	Description string      `json:"description,omitempty"`
 	Week        string      `json:"week,omitempty"`
+}
+
+func authenticatedMessage(b bool) []byte {
+	if b {
+		return []byte("{\"type\": 3, \"status\": true}")
+	} else {
+		return []byte("{\"type\": 3, \"status\": false}")
+	}
 }
 
 func (c *Client) read() {
@@ -62,27 +69,11 @@ func (c *Client) read() {
 
 		// Handle authentication without consulting the hub
 		if message.Type == AUTH {
-			var resp []byte
-
 			log.Printf("[INFO] Client %v is trying to authenticate", c.conn.RemoteAddr())
 
-			if message.Password == config.Password {
-				resp, err = json.Marshal(Message{Type: AUTH, Status: true})
-				if err != nil {
-					log.Println("[WARN] Marshalling password response failed! Should never happen.", err)
-				}
+			c.auth = message.Password == config.Password
+			c.send <- authenticatedMessage(c.auth)
 
-				c.auth = true
-			} else {
-				resp, err = json.Marshal(Message{Type: AUTH, Status: false})
-				if err != nil {
-					log.Println("[WARN] Marshalling password response failed! Should never happen.", err)
-				}
-
-				c.auth = false
-			}
-
-			c.send <- resp
 			continue
 		}
 

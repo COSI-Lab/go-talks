@@ -4,8 +4,7 @@ services:
   web:
     build: .
     container_name: talks
-    env_file: .env
     volumes:
-      - ./talks.db:/srv/website/talks.db
+      - ./talks.db:/root/talks.db
     ports:
       - 8000:80

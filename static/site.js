@@ -9,6 +9,7 @@ window.onload = function () {
 var socket = connect();
 var authenticated = false;
 var resolve_auth = undefined;
+var reject_auth = undefined;
 
 // If the user is not authenticated trigger the auth flow
 // Returns a promise that is resolved when the user is authenticated
@@ -32,6 +33,8 @@ function auth() {
     // Create a custom promise that is resolved by the socket onmessage handler
     const promise = new Promise((res, rej) => {
         resolve_auth = res;
+        reject_auth = rej;
+
         // Reject after 5 seconds
         setTimeout(() => {
             rej("Timed out");
@@ -93,7 +96,7 @@ function del(id) {
 
         socket.send(json);
     }).catch((reason) => {
-        alert("Failed to authenticate: " + reason);
+        alert(reason);
     });
 }
 
@@ -110,7 +113,7 @@ function hide(id) {
 
         socket.send(json);
     }).catch((reason) => {
-        alert("Failed to authenticate: " + reason);
+        alert(reason);
     });
 }
 
@@ -139,7 +142,7 @@ function create() {
 
         socket.send(json);
     }).catch((reason) => {
-        alert("Failed to authenticate: " + reason);
+        alert(reason);
     });
 }
 
@@ -229,10 +232,14 @@ function addTalk(talk) {
 
 // {"type": 3, "status": boolean}
 function handleAuth(data) {
-    console.log("Authenticated:", data.status == true);
-    authenticated = data.status == true;
+    success = !!data.status;
 
-    if (data.status && resolve_auth) {
+    console.log("Authenticated:", success);
+    authenticated = success;
+
+    if (resolve_auth && success) {
         resolve_auth();
+    } else if (reject_auth && !success) {
+        reject_auth("Authentication failed");
     }
 }

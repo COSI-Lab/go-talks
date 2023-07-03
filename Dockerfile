@@ -1,4 +1,4 @@
-# build web server
+# Build the server binary
 FROM golang:latest AS go-build
 
 WORKDIR /go/src/
@@ -6,17 +6,21 @@ WORKDIR /go/src/
 COPY ./go.mod ./go.sum ./
 RUN go mod download
 
-COPY ./ ./
-RUN go build -o server
+COPY *.go ./
+RUN go build -v -o server
 
-# copy server and static files to clean alpine image
+# Copies the server binary into a minimal image
 FROM debian:latest
 
-WORKDIR /srv/website
+WORKDIR /root/
 
-RUN apt-get update -y && apt-get upgrade -y && apt-get dist-upgrade -y && apt-get install curl -y
-
-COPY --from=go-build /go/src/ ./
+# Add config, templates, and static files
+COPY ./config.toml .
+COPY ./templates ./templates
 COPY ./static ./static
+COPY ./posts ./posts
 
-CMD ["./server"]
+COPY --from=go-build /go/src/server .
+
+# Run the server
+CMD ["/root/server"]

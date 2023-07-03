@@ -33,6 +33,8 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
+	log.Println("[INFO] Starting go-talks")
+
 	var err error
 	TZ, err = time.LoadLocation("America/New_York")
 	if err != nil {
