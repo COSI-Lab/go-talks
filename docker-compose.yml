@@ -6,5 +6,6 @@ services:
     container_name: talks
     volumes:
       - ./talks.db:/root/talks.db
+      - ./config.toml:/root/config.toml:ro
     ports:
       - 8000:80

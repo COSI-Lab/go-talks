@@ -15,7 +15,6 @@ FROM debian:latest
 WORKDIR /root/
 
 # Add config, templates, and static files
-COPY ./config.toml .
 COPY ./templates ./templates
 COPY ./static ./static
 COPY ./posts ./posts
