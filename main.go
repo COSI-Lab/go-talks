@@ -7,18 +7,20 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/go-co-op/gocron"
 	"github.com/gorilla/mux"
 	"github.com/microcosm-cc/bluemonday"
-	"github.com/russross/blackfriday"
+	"github.com/russross/blackfriday/v2"
 	"golang.org/x/net/html"
 )
 
-var talks_password = ""
 var hub Hub
 var tmpls *template.Template
+var config Config
+var trustedNetworks Networks
 
 var TZ *time.Location
 
@@ -33,18 +35,22 @@ func loggingMiddleware(next http.Handler) http.Handler {
 func main() {
 	var err error
 	TZ, err = time.LoadLocation("America/New_York")
-
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to load timezone:", err)
 	}
 
-	// talks_password = os.Getenv("TALKS_PASSWORD")
-	// if talks_password == "" {
-	// 	log.Fatalln("[ERROR] TALKS_PASSWORD environment variable is not set")
-	// }
+	configFile, err := os.Open("config.toml")
+	if err != nil {
+		log.Println("[WARN] Could not open config file, using defaults")
+		config = DefaultConfig()
+	} else {
+		config = ParseConfig(configFile)
+	}
+	config.Validate()
+	trustedNetworks = config.Network()
 
 	// Connect to the database
-	err = ConnectDB()
+	err = ConnectDB(&config)
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to connect to the database", err)
 	}
@@ -52,8 +58,8 @@ func main() {
 	// Set up all tables
 	MakeDB()
 
-	// Load templates with markdown func
-	tmpls = template.Must(template.New("").Funcs(template.FuncMap{"markdown": markDowner}).ParseGlob("templates/*.gohtml"))
+	// Load templates and add markdown function
+	tmpls = template.Must(template.New("").Funcs(template.FuncMap{"safe_markdown": markDownerSafe, "unsafe_markdown": markDownerUnsafe}).ParseGlob("templates/*.gohtml"))
 
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to compile some template(s)", err)
@@ -64,7 +70,7 @@ func main() {
 	r := mux.NewRouter()
 	r.Use(loggingMiddleware)
 
-	// "api" json encoded endpoints
+	// "api" endpoints
 	r.HandleFunc("/talks", indexTalksHandler)
 	r.HandleFunc("/{week:[0-9]{8}}/talks", talksHandler)
 	r.HandleFunc("/ws", socketHandler)
@@ -78,24 +84,10 @@ func main() {
 	r.HandleFunc("/", indexHandler)
 	r.HandleFunc("/{week:[0-9]{8}}", weekHandler)
 
-	// Set up server listen address
-	listenAddr, exists := os.LookupEnv("LISTEN")
-	if !exists {
-		listenAddr = ""
-	}
-
-	// Set up server port
-	port, exists := os.LookupEnv("PORT")
-	if !exists {
-		port = "5001"
-	}
-
-	// Create http server
-	srv := &http.Server{
-		Handler:      r,
-		Addr:         fmt.Sprintf("%s:%s", listenAddr, port),
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
+	// pages that are generated from markdown source in the posts directory
+	posts := []string{"usage"}
+	for _, post := range posts {
+		r.HandleFunc("/"+post, markdownFactory(post))
 	}
 
 	// Start the hub
@@ -110,17 +102,38 @@ func main() {
 	// Schedule backup tasks
 	s := gocron.NewScheduler(TZ)
 	s.Wednesday().At("23:59").Do(backup)
+	s.Every(1).Day().At("00:00").Do(invalidateCache)
 
-	// Start server
-	log.Println("[INFO] Web server is now listening for connections on http://localhost:" + port)
-	log.Fatal(srv.ListenAndServe())
+	// Start servers
+	var wg sync.WaitGroup
+	for listener := range config.Listen {
+		// Create http server
+		srv := &http.Server{
+			Handler:      r,
+			Addr:         config.Listen[listener],
+			WriteTimeout: 15 * time.Second,
+			ReadTimeout:  15 * time.Second,
+		}
+
+		// Start http server
+		log.Println("[INFO] Web server is now listening for connections on http://" + config.Listen[listener])
+		wg.Add(1)
+		go func() {
+			log.Fatal(srv.ListenAndServe())
+			wg.Done()
+		}()
+	}
+
+	wg.Wait()
 }
 
-// markDowner content as markdown and returns the html
-// it will proxy any img tags to protect users from ip-grabbers
-func markDowner(args ...interface{}) template.HTML {
-	// Compile markdown
-	s := blackfriday.MarkdownCommon([]byte(fmt.Sprintf("%s", args...)))
+const extensions = blackfriday.NoIntraEmphasis | blackfriday.FencedCode | blackfriday.Autolink |
+	blackfriday.Strikethrough | blackfriday.SpaceHeadings
+
+// markDownerSafe accepts markdown and returns sanitized html
+func markDownerSafe(args ...interface{}) template.HTML {
+
+	s := blackfriday.Run([]byte(fmt.Sprintf("%s", args...)), blackfriday.WithExtensions(extensions))
 	sanitized := bluemonday.UGCPolicy().SanitizeBytes(s)
 
 	// Proxy any images and re-render the html
@@ -129,4 +142,11 @@ func markDowner(args ...interface{}) template.HTML {
 	var buf bytes.Buffer
 	html.Render(&buf, doc)
 	return template.HTML(buf.String())
+}
+
+// markDowner accepts markdown and returns html
+// NOT SAFE FOR USER INPUT
+func markDownerUnsafe(args ...interface{}) template.HTML {
+	s := blackfriday.Run([]byte(fmt.Sprintf("%s", args...)), blackfriday.WithExtensions(extensions))
+	return template.HTML(s)
 }

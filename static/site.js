@@ -1,5 +1,5 @@
 // Resize text area
-window.onload = function() {
+window.onload = function () {
     document.getElementById("description").addEventListener("input", (e) => {
         e.target.style.height = "auto";
         e.target.style.height = (e.target.scrollHeight) + "px";
@@ -13,10 +13,10 @@ function connect() {
     var ws_scheme = window.location.protocol == "https:" ? "wss://" : "ws://";
 
     let socket = new WebSocket(ws_scheme + window.location.host + "/ws");
-    socket.onopen = function(e) {
+    socket.onopen = function (e) {
         console.log("Connected!", e);
     };
-    socket.onmessage = function(e) {
+    socket.onmessage = function (e) {
         const data = JSON.parse(e.data);
         console.log("Received:", data);
 
@@ -28,14 +28,14 @@ function connect() {
             hideTalk(data.id);
         }
     };
-    socket.onclose = function(e) {
+    socket.onclose = function (e) {
         console.log("Disconnected!", e);
         socket = connect();
     };
-    socket.onerror = function(e) {
+    socket.onerror = function (e) {
         console.log("Error!", e);
     };
- 
+
     return socket;
 }
 
@@ -49,7 +49,7 @@ function del(id) {
     const data = {
         type: 2,
         id: id
-    }    
+    }
 
     json = JSON.stringify(data);
     console.log(`Sending: ${json}`);
@@ -167,7 +167,7 @@ function addTalk(talk) {
     c2.innerHTML = typeToString[talk.talktype];
 
     var c3 = row.insertCell(3);
-    c3.setAttribute("class", "description");
+    c3.setAttribute("class", "description markdown");
     c3.innerHTML = talk.description;
 
     var c4 = row.insertCell(4);

@@ -26,6 +26,6 @@ type Talk struct {
 	Description string    `gorm:"not null" json:"description"`
 	IsHidden    bool      `gorm:"not null" json:"-"`
 	Week        string    `gorm:"index, not null" json:"-"`
-	Order       uint32    `gorm:"not null" json:"-"`
+	Order       uint32    `gorm:"not null" json:"-"` // TODO: Talk ordering
 	CreatedAt   time.Time `json:"-"`
 }

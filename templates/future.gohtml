@@ -19,7 +19,7 @@
         </div>
     </div>
     <br>
-    <table id="table">
+    <table class="content" id="table">
         <thead>
             <tr>
                 <th style="display: none;"></th>
@@ -36,7 +36,7 @@
                 <td style="display: none;"> {{.Id}} </td>
                 <td class="name"> {{.Name}} </td>
                 <td class="type"> {{.Type}} </td>
-                <td class="description"> {{.Description | markdown}} </td>
+                <td class="description markdown"> {{.Description | safe_markdown}} </td>
                 <td class="actions">
                     <button onclick='hide( {{ .Id }} )'> x </button>
                 </td>
@@ -64,11 +64,7 @@
             </tr>
         </tbody>
     </table>
-    <footer>
-        <b>
-            <a href="https://github.com/COSI-Lab/go-talks">Link to Github Repository</a>
-        </b>
-    </footer>
+    {{ template "footer.gohtml" . }}
 </body>
 
 </html>

@@ -13,12 +13,12 @@ var DB *gorm.DB
 var DB_LOCK sync.Mutex
 
 // ConnectDB sets up the initial connection to the database along with retrying attempts
-func ConnectDB() error {
+func ConnectDB(config *Config) error {
 	DB_LOCK.Lock()
 	defer DB_LOCK.Unlock()
 
 	var err error
-	DB, err = gorm.Open(sqlite.Open("talks.db"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open(config.Database), &gorm.Config{})
 	return err
 }
 
@@ -54,7 +54,7 @@ func VisibleTalks(week string) []Talk {
 	result := DB.Where("is_hidden = false").Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
-		log.Println("[WARN]", result)
+		log.Println("[WARN] could not get visible talks:", result)
 	}
 
 	return talks
@@ -72,7 +72,7 @@ func AllTalks(week string) []Talk {
 	result := DB.Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
-		log.Println("[WARN]", result)
+		log.Println("[WARN] could not get all talks:", result)
 	}
 
 	return talks
@@ -85,7 +85,7 @@ func CreateTalk(talk *Talk) uint32 {
 	result := DB.Create(talk)
 
 	if result.Error != nil {
-		log.Println("[WARN]", result)
+		log.Println("[WARN] could not create talk:", result)
 	}
 
 	log.Println("[INFO] Created talk {", talk.Name, talk.Description, talk.Type, talk.Week, talk.Id, "}")
@@ -93,8 +93,6 @@ func CreateTalk(talk *Talk) uint32 {
 }
 
 func HideTalk(id uint32) {
-	// TODO if it's before the meeting start time delete the talk instead
-
 	DB_LOCK.Lock()
 	defer DB_LOCK.Unlock()
 
@@ -102,14 +100,14 @@ func HideTalk(id uint32) {
 	result := DB.First(&talk, id)
 
 	if result.Error != nil {
-		log.Println("[WARN]", result)
+		log.Println("[WARN] could not find talk:", result)
 	}
 
 	talk.IsHidden = true
 	result = DB.Save(&talk)
 
 	if result.Error != nil {
-		log.Println("[WARN]", result)
+		log.Println("[WARN] could not hide talk:", result)
 	}
 }
 
@@ -121,12 +119,12 @@ func DeleteTalk(id uint32) {
 	result := DB.First(&talk, id)
 
 	if result.Error != nil {
-		log.Println("[WARN]", result)
+		log.Println("[WARN] could not find talk:", result)
 	}
 
 	result = DB.Delete(&talk)
 
 	if result.Error != nil {
-		log.Println("[WARN]", result)
+		log.Println("[WARN] could not delete talk:", result)
 	}
 }

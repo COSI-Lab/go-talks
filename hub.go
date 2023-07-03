@@ -20,20 +20,17 @@ type Hub struct {
 }
 
 func (hub *Hub) countConnections() int {
-	connections := len(hub.clients)
-
-	return connections
+	return len(hub.clients)
 }
 
 func processMessage(message *Message) bool {
 	switch message.Type {
 	case NEW:
-		if message.Week == "" {
-			message.Week = nextWednesday()
-		}
-
 		// You can not create a talk for a previous meeting
-		if isPast(nextWednesday(), message.Week) {
+		wednesday := nextWednesday()
+		if message.Week == "" {
+			message.Week = wednesday
+		} else if isPast(wednesday, message.Week) {
 			return false
 		}
 
@@ -50,8 +47,8 @@ func processMessage(message *Message) bool {
 		}
 		talk.Description = message.Description
 
-		// Update the message's description to be markdowned
-		message.Description = string(markDowner(message.Description))
+		// Update the message's description to be parsed as markdown
+		message.Description = string(markDownerSafe(message.Description))
 
 		// Validate talk name
 		if message.Name == "" {
@@ -65,13 +62,13 @@ func processMessage(message *Message) bool {
 
 		message.Id = CreateTalk(talk)
 	case HIDE:
-		// Only hide talks during meetings, otherwise delete them
-		if !DuringMeeting() {
-			log.Println("[INFO] Delete talk {", message.Id, "}")
-			DeleteTalk(message.Id)
-		} else {
+		// During meetings we hide talks instead of deleting them
+		if duringMeeting() {
 			log.Println("[INFO] Hide talk {", message.Id, "}")
 			HideTalk(message.Id)
+		} else {
+			log.Println("[INFO] Delete talk {", message.Id, "}")
+			DeleteTalk(message.Id)
 		}
 	case DELETE:
 		log.Println("[INFO] Delete talk {", message.Id, "}")
@@ -87,12 +84,10 @@ func (hub *Hub) run() {
 		case client := <-hub.register:
 			// registers a client
 			hub.clients[client] = true
-			log.Println("[INFO] Registered client", client.conn.RemoteAddr())
 		case client := <-hub.unregister:
 			// unregister a client
 			delete(hub.clients, client)
 			close(client.send)
-			log.Println("[INFO] Unregistered client", client.conn.RemoteAddr())
 		case message := <-hub.broadcast:
 			// broadcasts the message to all clients (including the one that sent the message)
 			if !processMessage(&message) {

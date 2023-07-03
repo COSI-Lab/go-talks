@@ -1,0 +1,4 @@
+listen = ["[::]:5000"]
+password = "password"
+database = "talks.db"
+subnets = ["127.0.0.0/8", "::1/128"]

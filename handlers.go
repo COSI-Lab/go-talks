@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
@@ -33,7 +37,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// Render the template
 	err := tmpls.ExecuteTemplate(w, "future.gohtml", res)
 	if err != nil {
-		log.Println("[WARN]", err)
+		log.Println("[WARN] Failed to render template:", err)
 	}
 }
 
@@ -44,9 +48,8 @@ func weekHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate week and get human readable version
 	human, err := weekForHumans(week)
-
 	if err != nil {
-		log.Println("[INFO]", err)
+		log.Println("[WARN] Requested invalid week:", week)
 		w.WriteHeader(400)
 		return
 	}
@@ -64,7 +67,7 @@ func weekHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Println("[WARN]", err)
+		log.Println("[WARN] Failed to render template:", err)
 	}
 }
 
@@ -73,9 +76,8 @@ func indexTalksHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate week and get human readable version
 	_, err := weekForHumans(week)
-
 	if err != nil {
-		log.Println("[INFO]", err)
+		log.Println("[WARN] Invalid week:", week)
 		w.WriteHeader(400)
 		return
 	}
@@ -85,7 +87,7 @@ func indexTalksHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse talks as JSON
 	err = json.NewEncoder(w).Encode(talks)
 	if err != nil {
-		log.Println("[WARN]", err)
+		log.Println("[WARN] Failed to encode talks:", err)
 	}
 }
 
@@ -96,9 +98,8 @@ func talksHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Validate week and get human readable version
 	_, err := weekForHumans(week)
-
 	if err != nil {
-		log.Println("[INFO]", err)
+		log.Println("[WARN] Invalid week:", week)
 		w.WriteHeader(400)
 		return
 	}
@@ -108,7 +109,7 @@ func talksHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse talks as JSON
 	err = json.NewEncoder(w).Encode(talks)
 	if err != nil {
-		log.Println("[WARN]", err)
+		log.Println("[WARN] Failed to encode talks:", err)
 	}
 }
 
@@ -121,8 +122,25 @@ func imageHandler(w http.ResponseWriter, r *http.Request) {
 	cacheLock.RLock()
 	defer cacheLock.RUnlock()
 
+	// Decode the id ([32]byte)
+	hash, err := base64.URLEncoding.DecodeString(id)
+	if err != nil {
+		log.Println("[WARN] failed to decode image id:", err)
+		w.WriteHeader(400)
+		return
+	}
+	if len(hash) != 32 {
+		log.Println("[WARN]", "Invalid hash length")
+		w.WriteHeader(400)
+		return
+	}
+
+	// Copy the hash into a new [32]byte
+	var hash32 [32]byte
+	copy(hash32[:], hash)
+
 	// Get the image from the cache
-	image, ok := cache[id]
+	image, ok := cache[hash32]
 	if !ok {
 		w.WriteHeader(404)
 		return
@@ -143,14 +161,65 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade the connection to a websocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("[WARN]", err)
+		log.Println("[WARN] failed to upgrade connection:", err)
 		return
 	}
 
-	client := &Client{conn: conn, send: make(chan []byte)}
+	addr, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
+	ip := net.ParseIP(addr)
+
+	authenticated := false
+	if trustedNetworks.Contains(ip) {
+		// Could be a load balancer, check the X-REAL-IP header
+		if realIP := r.Header.Get("X-REAL-IP"); realIP != "" {
+			// Check if the real IP is in the trusted network
+			ip = net.ParseIP(realIP)
+			if trustedNetworks.Contains(ip) {
+				authenticated = true
+			}
+		} else {
+			authenticated = true
+		}
+	}
+	log.Printf("[INFO] New connection from %s (authenticated: %t)", ip, authenticated)
+
+	client := &Client{conn: conn, send: make(chan []byte), auth: authenticated}
 	hub.register <- client
 
 	// Run send and receive in goroutines
 	go client.write()
 	go client.read()
+}
+
+type Post struct {
+	Title   string
+	Content string
+}
+
+// Creates a handler that serves static html after rendering markdown
+func markdownFactory(post string) func(http.ResponseWriter, *http.Request) {
+	path := "posts/" + post + ".md"
+
+	// Read content from file
+	content, err := os.ReadFile(path)
+	if err != nil {
+		log.Fatal("[FATAL] Failed to read markdown file:", err)
+	}
+
+	// Create a dummy writer to capture the output of the template
+	buff := bytes.NewBuffer(nil)
+
+	// Render the markdown
+	err = tmpls.ExecuteTemplate(buff, "markdown.gohtml", Post{
+		Title:   post,
+		Content: string(content),
+	})
+
+	if err != nil {
+		log.Fatal("[FATAL] Failed to render markdown template:", err)
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Write(buff.Bytes())
+	}
 }

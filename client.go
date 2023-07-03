@@ -27,6 +27,7 @@ const (
 	DELETE
 	MOVE
 	AUTH
+	SYNC
 )
 
 type Message struct {
@@ -64,7 +65,8 @@ func (c *Client) read() {
 		// Handle authentication without consulting the hub
 		if message.Type == AUTH {
 			var resp []byte
-			if message.Password == talks_password {
+
+			if message.Password == config.Password {
 				resp, err = json.Marshal(Message{Type: AUTH})
 				if err != nil {
 					log.Println("[WARN] Marshalling password response failed! Should never happen.", err)

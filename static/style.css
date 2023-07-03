@@ -1,8 +1,7 @@
 @import url("https://fonts.googleapis.com/css?family=Open+Sans");
 
 :root {
-	--background-color: rgba(255,255,255,0.2);
-	--text-color: white;
+    --text-color: white;
 }
 
 body {
@@ -21,12 +20,12 @@ body {
     font-size: 24px;
 }
 
-.grow { 
-    transition: all .2s ease-in-out; 
+.grow {
+    transition: all .2s ease-in-out;
 }
 
-.grow:hover { 
-    transform: scale(1.1); 
+.grow:hover {
+    transform: scale(1.1);
 }
 
 .header h1 {
@@ -34,7 +33,7 @@ body {
     font-size: 48px;
     margin-bottom: 0;
 }
-  
+
 .header h3 {
     text-align: center;
     font-size: 24px;
@@ -58,11 +57,6 @@ textarea {
 
 .description * {
     margin: 0;
-}
-
-.description pre {
-    text-align: left;
-    margin-left: 10%;
 }
 
 .description del {
@@ -130,11 +124,71 @@ table td button {
 footer {
     margin-top: auto;
     padding-bottom: 10px;
-    display:block;
+    display: block;
     text-align: center;
 }
 
 footer a {
-    color:white;
+    color: white;
     text-decoration: none;
+}
+
+
+/* Markdown formatted post */
+.post {
+    margin: 25px auto 25px auto;
+    width: 75%;
+    background-color: white;
+    color: #444;
+}
+
+.post h1 {
+    text-align: center;
+    font-size: 48px;
+}
+
+.post h2 {
+    text-align: center;
+    font-size: 36px;
+}
+
+.post p {
+    text-align: justify;
+    font-size: 16px;
+    padding: 0 5%;
+}
+
+/* Shared markdown (description/post) */
+.markdown pre {
+    display: block;
+    margin: 0 5%;
+    width: fit-content;
+    overflow-x: auto;
+    background: #444;
+    color: white;
+    padding: 15px;
+    text-align: left;
+}
+
+.markdown pre code {
+    font-size: 14px;
+}
+
+.markdown p code {
+    background: #444;
+    color: white;
+    padding: 2px;
+}
+
+/* Add vertical bar behind blockquotes */
+.markdown blockquote {
+    border-left: 5px solid #222;
+}
+
+.markdown blockquote p {
+    padding-left: 10px;
+}
+
+.markdown table {
+    margin-top: 25px;
 }

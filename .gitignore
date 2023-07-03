@@ -5,3 +5,4 @@ talks.db
 main
 gin-bin
 backups
+config.toml
