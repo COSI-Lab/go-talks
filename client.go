@@ -25,14 +25,12 @@ const (
 	NEW MessageType = iota
 	HIDE
 	DELETE
-	MOVE
 	AUTH
-	SYNC
 )
 
 type Message struct {
 	Type        MessageType `json:"type"`
-	Status      uint32      `json:"status,omitempty"`
+	Status      bool        `json:"status,omitempty"` // For AUTH
 	Id          uint32      `json:"id,omitempty"`
 	Password    string      `json:"password,omitempty"`
 	Name        string      `json:"name,omitempty"`
@@ -66,15 +64,17 @@ func (c *Client) read() {
 		if message.Type == AUTH {
 			var resp []byte
 
+			log.Printf("[INFO] Client %v is trying to authenticate", c.conn.RemoteAddr())
+
 			if message.Password == config.Password {
-				resp, err = json.Marshal(Message{Type: AUTH})
+				resp, err = json.Marshal(Message{Type: AUTH, Status: true})
 				if err != nil {
 					log.Println("[WARN] Marshalling password response failed! Should never happen.", err)
 				}
 
 				c.auth = true
 			} else {
-				resp, err = json.Marshal(Message{Type: AUTH})
+				resp, err = json.Marshal(Message{Type: AUTH, Status: false})
 				if err != nil {
 					log.Println("[WARN] Marshalling password response failed! Should never happen.", err)
 				}

@@ -181,6 +181,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 			authenticated = true
 		}
 	}
+	authenticated = false
 	log.Printf("[INFO] New connection from %s (authenticated: %t)", ip, authenticated)
 
 	client := &Client{conn: conn, send: make(chan []byte), auth: authenticated}
@@ -189,6 +190,10 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	// Run send and receive in goroutines
 	go client.write()
 	go client.read()
+
+	// Send an authentication response
+	message, _ := json.Marshal(Message{Type: AUTH, Status: authenticated})
+	client.send <- message
 }
 
 type Post struct {

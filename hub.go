@@ -61,6 +61,7 @@ func processMessage(message *Message) bool {
 		talk.Order = 0
 
 		message.Id = CreateTalk(talk)
+		return true
 	case HIDE:
 		// During meetings we hide talks instead of deleting them
 		if duringMeeting() {
@@ -70,12 +71,14 @@ func processMessage(message *Message) bool {
 			log.Println("[INFO] Delete talk {", message.Id, "}")
 			DeleteTalk(message.Id)
 		}
+		return true
 	case DELETE:
 		log.Println("[INFO] Delete talk {", message.Id, "}")
 		DeleteTalk(message.Id)
+		return true
+	default:
+		return false
 	}
-
-	return true
 }
 
 func (hub *Hub) run() {

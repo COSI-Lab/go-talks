@@ -3,10 +3,43 @@ window.onload = function () {
     document.getElementById("description").addEventListener("input", (e) => {
         e.target.style.height = "auto";
         e.target.style.height = (e.target.scrollHeight) + "px";
-    })
+    });
 }
 
-var socket = connect()
+var socket = connect();
+var authenticated = false;
+var resolve_auth = undefined;
+
+// If the user is not authenticated trigger the auth flow
+// Returns a promise that is resolved when the user is authenticated
+function auth() {
+    if (authenticated) {
+        return Promise.resolve();
+    }
+
+    const password = prompt("Please enter the password to authenticate");
+
+    const data = {
+        type: 3,
+        password: password
+    }
+
+    const json = JSON.stringify(data);
+    console.log(`Sending: ${json}`);
+
+    socket.send(json);
+
+    // Create a custom promise that is resolved by the socket onmessage handler
+    const promise = new Promise((res, rej) => {
+        resolve_auth = res;
+        // Reject after 5 seconds
+        setTimeout(() => {
+            rej("Timed out");
+        }, 5000);
+    });
+
+    return promise;
+}
 
 // Connects to the websocket endpoint
 function connect() {
@@ -26,6 +59,9 @@ function connect() {
         } else if (data.type == 1 || data.type == 2) {
             // Hide the talk from the table
             hideTalk(data.id);
+        } else if (data.type == 3) {
+            // Receiving an auth message means we have successfully authenticated
+            handleAuth(data);
         }
     };
     socket.onclose = function (e) {
@@ -39,36 +75,46 @@ function connect() {
     return socket;
 }
 
+// User triggers talk deletion
 function del(id) {
     confirmed = confirm("Are you sure you want to delete this talk? THIS CANNOT BE UNDONE");
-
     if (!confirmed) {
         return;
     }
 
-    const data = {
-        type: 2,
-        id: id
-    }
+    auth().then(() => {
+        const data = {
+            type: 2,
+            id: id
+        }
 
-    json = JSON.stringify(data);
-    console.log(`Sending: ${json}`);
+        const json = JSON.stringify(data);
+        console.log(`Sending: ${json}`);
 
-    socket.send(json);
+        socket.send(json);
+    }).catch((reason) => {
+        alert("Failed to authenticate: " + reason);
+    });
 }
 
+// User triggers talk hiding
 function hide(id) {
-    const data = {
-        type: 1,
-        id: id
-    };
+    auth().then(() => {
+        const data = {
+            type: 1,
+            id: id
+        };
 
-    json = JSON.stringify(data);
-    console.log(`Sending: ${json}`);
+        const json = JSON.stringify(data);
+        console.log(`Sending: ${json}`);
 
-    socket.send(json);
+        socket.send(json);
+    }).catch((reason) => {
+        alert("Failed to authenticate: " + reason);
+    });
 }
 
+// User triggers talk creation
 function create() {
     const name = document.getElementById("name").value;
     const description = document.getElementById("description").value;
@@ -79,19 +125,25 @@ function create() {
         return;
     }
 
-    const data = {
-        type: 0,
-        name: name,
-        description: description,
-        talktype: parseInt(talktype),
-        week: week
-    };
+    auth().then(() => {
+        const data = {
+            type: 0,
+            name: name,
+            description: description,
+            talktype: parseInt(talktype),
+            week: week
+        };
 
-    json = JSON.stringify(data);
-    console.log(`Sending: ${json}`);
+        const json = JSON.stringify(data);
+        console.log(`Sending: ${json}`);
 
-    socket.send(json);
+        socket.send(json);
+    }).catch((reason) => {
+        alert("Failed to authenticate: " + reason);
+    });
 }
+
+// ---- RESPONSE HANDLERS ---- //
 
 const typeToString = {
     0: "forum topic",
@@ -129,7 +181,7 @@ function hideTalk(id) {
     }
 }
 
-// {"type":0,"name":"b","description":"b","talktype":0}
+// {"type":0,"name":"string","description":"string","talktype":0}
 function addTalk(talk) {
     if (talk.week != week) {
         console.log("Skipping new talk because it is for a different week", talk.week);
@@ -173,4 +225,14 @@ function addTalk(talk) {
     var c4 = row.insertCell(4);
     c4.setAttribute("class", "actions");
     c4.innerHTML = '<button onclick="hide(' + talk.id + ')"> x </button>';
+}
+
+// {"type": 3, "status": boolean}
+function handleAuth(data) {
+    console.log("Authenticated:", data.status == true);
+    authenticated = data.status == true;
+
+    if (data.status && resolve_auth) {
+        resolve_auth();
+    }
 }
