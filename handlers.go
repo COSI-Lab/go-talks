@@ -182,7 +182,6 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 			authenticated = true
 		}
 	}
-	authenticated = false
 	log.Printf("[INFO] New connection from %s (authenticated: %t)", ip, authenticated)
 
 	client := &Client{conn: conn, send: make(chan []byte), auth: authenticated}
