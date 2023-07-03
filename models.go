@@ -2,14 +2,20 @@ package main
 
 import "time"
 
+// TalkType is the type of talk
 type TalkType uint32
 
 const (
-	FORUM_TOPIC TalkType = iota
-	LIGHTNING_TALK
-	PROJECT_UPDATE
-	ANNOUNCEMENT
-	AFTER_MEETING_SLOT
+	// ForumTopic are for general lab discussion
+	ForumTopic TalkType = iota
+	// LightningTalk are for short (5-10 minute) talks
+	LightningTalk
+	// ProjectUpdate are quick updates regarding ongoing projects
+	ProjectUpdate
+	// Announcement are for... announcements
+	Announcement
+	// AfterMeetingSlot holding events that happen after the meeting
+	AfterMeetingSlot
 )
 
 func (tt TalkType) String() string {
@@ -19,8 +25,9 @@ func (tt TalkType) String() string {
 	return []string{"forum topic", "lightning talk", "project update", "announcement", "after meeting slot"}[tt]
 }
 
+// Talk is used to represent a talk in the database
 type Talk struct {
-	Id          uint32    `gorm:"AUTO_INCREMENT, primary key" json:"id"`
+	ID          uint32    `gorm:"AUTO_INCREMENT, primary key" json:"id"`
 	Name        string    `gorm:"not null" json:"name"`
 	Type        TalkType  `gorm:"not null" json:"type"`
 	Description string    `gorm:"not null" json:"description"`

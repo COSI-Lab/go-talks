@@ -22,7 +22,7 @@ var tmpls *template.Template
 var config Config
 var trustedNetworks Networks
 
-var TZ *time.Location
+var tz *time.Location
 
 // Logs request Method and request URI
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -36,18 +36,17 @@ func main() {
 	log.Println("[INFO] Starting go-talks")
 
 	var err error
-	TZ, err = time.LoadLocation("America/New_York")
+	tz, err = time.LoadLocation("America/New_York")
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to load timezone:", err)
 	}
 
 	configFile, err := os.Open("config.toml")
 	if err != nil {
-		log.Println("[WARN] Could not open config file, using defaults")
-		config = DefaultConfig()
-	} else {
-		config = ParseConfig(configFile)
+		log.Fatalln("[ERROR] Failed to open config file", err)
 	}
+
+	config = ParseConfig(configFile)
 	config.Validate()
 	trustedNetworks = config.Network()
 
@@ -94,7 +93,7 @@ func main() {
 
 	// Start the hub
 	hub = Hub{
-		clients:    make(map[*Client]bool),
+		clients:    make(map[*Client]struct{}),
 		broadcast:  make(chan Message),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
@@ -102,7 +101,7 @@ func main() {
 	go hub.run()
 
 	// Schedule backup tasks
-	s := gocron.NewScheduler(TZ)
+	s := gocron.NewScheduler(tz)
 	s.Wednesday().At("23:59").Do(backup)
 	s.Every(1).Day().At("00:00").Do(invalidateCache)
 

@@ -8,50 +8,52 @@ import (
 	"gorm.io/gorm"
 )
 
-// DB is a global db connection to be shared
-var DB *gorm.DB
-var DB_LOCK sync.Mutex
+// db is a global db connection to be shared
+var db *gorm.DB
+var dbLock sync.Mutex
 
 // ConnectDB sets up the initial connection to the database along with retrying attempts
 func ConnectDB(config *Config) error {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	var err error
-	DB, err = gorm.Open(sqlite.Open(config.Database), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open(config.Database), &gorm.Config{})
 	return err
 }
 
 // MakeDB sets up the db
 func MakeDB() {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	// Create all regular tables
-	DB.AutoMigrate(
+	db.AutoMigrate(
 		&Talk{},
 	)
 }
 
 // DropTables drops everything in the db
 func DropTables() {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	// Drop tables in an order that won't invoke errors from foreign key constraints
-	DB.Migrator().DropTable(&Talk{})
+	db.Migrator().DropTable(&Talk{})
 }
 
+// VisibleTalks returns all visible talks for a given week
+// If week is empty, it will default to this week
 func VisibleTalks(week string) []Talk {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	if week == "" {
 		week = nextWednesday()
 	}
 
 	var talks []Talk
-	result := DB.Where("is_hidden = false").Where("week = ?", week).Order("type").Find(&talks)
+	result := db.Where("is_hidden = false").Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
 		log.Println("[WARN] could not get visible talks:", result)
@@ -60,16 +62,18 @@ func VisibleTalks(week string) []Talk {
 	return talks
 }
 
+// AllTalks returns all talks for a given week
+// If week is empty, it will default to this week
 func AllTalks(week string) []Talk {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	if week == "" {
 		week = nextWednesday()
 	}
 
 	var talks []Talk
-	result := DB.Where("week = ?", week).Order("type").Find(&talks)
+	result := db.Where("week = ?", week).Order("type").Find(&talks)
 
 	if result.Error != nil {
 		log.Println("[WARN] could not get all talks:", result)
@@ -78,51 +82,54 @@ func AllTalks(week string) []Talk {
 	return talks
 }
 
+// CreateTalk inserts a new talk into the db
 func CreateTalk(talk *Talk) uint32 {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
-	result := DB.Create(talk)
+	result := db.Create(talk)
 
 	if result.Error != nil {
 		log.Println("[WARN] could not create talk:", result)
 	}
 
-	log.Println("[INFO] Created talk {", talk.Name, talk.Description, talk.Type, talk.Week, talk.Id, "}")
-	return talk.Id
+	log.Println("[INFO] Created talk {", talk.Name, talk.Description, talk.Type, talk.Week, talk.ID, "}")
+	return talk.ID
 }
 
+// HideTalk updates a talk, setting its isHidden field to true
 func HideTalk(id uint32) {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	talk := Talk{}
-	result := DB.First(&talk, id)
+	result := db.First(&talk, id)
 
 	if result.Error != nil {
 		log.Println("[WARN] could not find talk:", result)
 	}
 
 	talk.IsHidden = true
-	result = DB.Save(&talk)
+	result = db.Save(&talk)
 
 	if result.Error != nil {
 		log.Println("[WARN] could not hide talk:", result)
 	}
 }
 
+// DeleteTalk deletes a talk from the db
 func DeleteTalk(id uint32) {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	talk := Talk{}
-	result := DB.First(&talk, id)
+	result := db.First(&talk, id)
 
 	if result.Error != nil {
 		log.Println("[WARN] could not find talk:", result)
 	}
 
-	result = DB.Delete(&talk)
+	result = db.Delete(&talk)
 
 	if result.Error != nil {
 		log.Println("[WARN] could not delete talk:", result)

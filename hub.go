@@ -5,9 +5,10 @@ import (
 	"log"
 )
 
+// Hub maintains a set of active clients and broadcasts messages to the clients
 type Hub struct {
-	// Map of clients TODO: Make a HashSet?
-	clients map[*Client]bool
+	// Map of clients
+	clients map[*Client]struct{}
 
 	// Inbound messages from the clients
 	broadcast chan Message
@@ -60,21 +61,21 @@ func processMessage(message *Message) bool {
 		// TODO: Talk order
 		talk.Order = 0
 
-		message.Id = CreateTalk(talk)
+		message.ID = CreateTalk(talk)
 		return true
 	case HIDE:
 		// During meetings we hide talks instead of deleting them
 		if duringMeeting() {
-			log.Println("[INFO] Hide talk {", message.Id, "}")
-			HideTalk(message.Id)
+			log.Println("[INFO] Hide talk {", message.ID, "}")
+			HideTalk(message.ID)
 		} else {
-			log.Println("[INFO] Delete talk {", message.Id, "}")
-			DeleteTalk(message.Id)
+			log.Println("[INFO] Delete talk {", message.ID, "}")
+			DeleteTalk(message.ID)
 		}
 		return true
 	case DELETE:
-		log.Println("[INFO] Delete talk {", message.Id, "}")
-		DeleteTalk(message.Id)
+		log.Println("[INFO] Delete talk {", message.ID, "}")
+		DeleteTalk(message.ID)
 		return true
 	default:
 		return false
@@ -86,7 +87,7 @@ func (hub *Hub) run() {
 		select {
 		case client := <-hub.register:
 			// registers a client
-			hub.clients[client] = true
+			hub.clients[client] = struct{}{}
 		case client := <-hub.unregister:
 			// unregister a client
 			delete(hub.clients, client)

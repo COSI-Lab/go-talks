@@ -17,6 +17,7 @@ import (
 var cache = make(map[[32]byte]Image)
 var cacheLock = sync.RWMutex{}
 
+// Image is what we store in the cache
 type Image struct {
 	ContentType string
 	Data        []byte
@@ -70,7 +71,7 @@ func findImagesAndCacheThem(doc *html.Node) {
 				// Download the image and cache it
 				hash, err := cacheImage(attr.Val)
 				if err != nil {
-					log.Println("[ERROR] Failed to download image", err)
+					log.Println("[WARN] Failed to download image", err)
 				}
 				id := base64.URLEncoding.EncodeToString(hash[:])
 

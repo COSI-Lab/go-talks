@@ -9,11 +9,11 @@ import (
 
 // Saves weekly backups of the database going back 4 weeks
 func backup() {
-	DB_LOCK.Lock()
-	defer DB_LOCK.Unlock()
+	dbLock.Lock()
+	defer dbLock.Unlock()
 
 	// Get the current date
-	t := time.Now().In(TZ)
+	t := time.Now().In(tz)
 	date := t.Format("2006-01-02")
 
 	// File name for the backup

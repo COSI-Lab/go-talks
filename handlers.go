@@ -16,6 +16,7 @@ import (
 
 var upgrader = websocket.Upgrader{}
 
+// TemplateResponse contains the information needed to render the past and future templates
 type TemplateResponse struct {
 	Talks     []Talk
 	HumanWeek string
@@ -195,6 +196,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	client.send <- authenticatedMessage(authenticated)
 }
 
+// Post contains the information needed to render a markdown post
 type Post struct {
 	Title   string
 	Content string

@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+// Client is a middleman between the websocket connection and the hub.
 type Client struct {
 	// The websocket connection
 	conn *websocket.Conn
@@ -19,18 +20,26 @@ type Client struct {
 	auth bool
 }
 
+// MessageType are the types of messages that can be sent/received
 type MessageType uint
 
 const (
+	// NEW creates a new talk
 	NEW MessageType = iota
+	// HIDE hides a talk
 	HIDE
+	// DELETE deletes a talk
 	DELETE
+	// AUTH communicates authentication request/response
 	AUTH
 )
 
+// Message is the format of messages sent between the client and server
+// Since go doesn't have the strongest type system we pack every message
+// into a single struct
 type Message struct {
 	Type        MessageType `json:"type"`
-	Id          uint32      `json:"id,omitempty"`
+	ID          uint32      `json:"id,omitempty"`
 	Password    string      `json:"password,omitempty"`
 	Name        string      `json:"name,omitempty"`
 	Talktype    *TalkType   `json:"talktype,omitempty"`
@@ -41,9 +50,9 @@ type Message struct {
 func authenticatedMessage(b bool) []byte {
 	if b {
 		return []byte("{\"type\": 3, \"status\": true}")
-	} else {
-		return []byte("{\"type\": 3, \"status\": false}")
 	}
+
+	return []byte("{\"type\": 3, \"status\": false}")
 }
 
 func (c *Client) read() {
@@ -56,7 +65,7 @@ func (c *Client) read() {
 		// Read from the connection
 		_, raw, err := c.conn.ReadMessage()
 		if err != nil {
-			log.Printf("[ERROR] %v", err)
+			log.Printf("[WARN] %v", err)
 			break
 		}
 
@@ -99,13 +108,13 @@ func (c *Client) write() {
 
 			err := c.conn.WriteMessage(websocket.TextMessage, message)
 			if err != nil {
-				log.Printf("[ERROR] %v", err)
+				log.Printf("[WARN] %v", err)
 				return
 			}
 		case <-ticker.C:
 			err := c.conn.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
-				log.Printf("[ERROR] %v", err)
+				log.Printf("[WARN] %v", err)
 				return
 			}
 		}
