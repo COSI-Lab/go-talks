@@ -178,8 +178,6 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 			if trustedNetworks.Contains(ip) {
 				authenticated = true
 			}
-		} else {
-			authenticated = true
 		}
 	}
 	log.Printf("[INFO] New connection from %s (authenticated: %t)", ip, authenticated)
