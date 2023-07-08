@@ -21,6 +21,8 @@ func NewNetworks(subnets []string) Networks {
 		}
 		n.nets = append(n.nets, net)
 	}
+
+	log.Printf("[INFO] Trusted subnets: %s", n.nets)
 	return n
 }
 

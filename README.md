@@ -14,7 +14,7 @@ go-talks (Or more commonly known as just Talks) is an app to manage talks at COS
 - /posts directory supports rendering pre-written markdown files
 - Image caching/proxying
 - Create future talks and view historic talks
-- Backed by SQLITE database
+- Backed by an append only log database
 
 ## Endpoints
 
@@ -27,3 +27,4 @@ go-talks (Or more commonly known as just Talks) is an app to manage talks at COS
 | GET     | /img/{id}          | Image proxy                                      |
 | GET     | /health            | Indicates how many active connections there are  |
 | GET     | /ws                | Websocket endpoint                               |
+

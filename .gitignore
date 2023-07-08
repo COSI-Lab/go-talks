@@ -1,8 +1,8 @@
 .DS_Store
 .env
 go-talks
-talks.db
 main
 gin-bin
 backups
 config.toml
+*.db*

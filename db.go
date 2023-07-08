@@ -1,137 +1,231 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
+	"io"
 	"log"
 	"sync"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-// db is a global db connection to be shared
-var db *gorm.DB
-var dbLock sync.Mutex
+// Global talks object
+var talks *Talks
 
-// ConnectDB sets up the initial connection to the database along with retrying attempts
-func ConnectDB(config *Config) error {
-	dbLock.Lock()
-	defer dbLock.Unlock()
+// Talks stores all it's data in an append-only log
+type Talks struct {
+	// Logs are protected by a RWMutex
+	sync.RWMutex
+	// The file we're writing to (opened in append mode)
+	encoder *json.Encoder
+	// Maps talk IDs to talks
+	talks map[uint32]*Talk
 
-	var err error
-	db, err = gorm.Open(sqlite.Open(config.Database), &gorm.Config{})
-	return err
+	// An index of talks by week
+	weeks map[string][]*Talk
+
+	// The current ID counter
+	id uint32
 }
 
-// MakeDB sets up the db
-func MakeDB() {
-	dbLock.Lock()
-	defer dbLock.Unlock()
+// NewTalks creates a new talks object, loading the talks from the given reader
+// and writing new events to the given writer
+func NewTalks(r io.Reader, w io.Writer) (*Talks, error) {
+	encoder := json.NewEncoder(w)
 
-	// Create all regular tables
-	db.AutoMigrate(
-		&Talk{},
-	)
-}
-
-// DropTables drops everything in the db
-func DropTables() {
-	dbLock.Lock()
-	defer dbLock.Unlock()
-
-	// Drop tables in an order that won't invoke errors from foreign key constraints
-	db.Migrator().DropTable(&Talk{})
-}
-
-// VisibleTalks returns all visible talks for a given week
-// If week is empty, it will default to this week
-func VisibleTalks(week string) []Talk {
-	dbLock.Lock()
-	defer dbLock.Unlock()
-
-	if week == "" {
-		week = nextWednesday()
+	// Create the talks object
+	t := &Talks{
+		RWMutex: sync.RWMutex{},
+		encoder: encoder,
+		talks:   make(map[uint32]*Talk),
+		weeks:   make(map[string][]*Talk),
+		id:      0,
 	}
 
-	var talks []Talk
-	result := db.Where("is_hidden = false").Where("week = ?", week).Order("type").Find(&talks)
-
-	if result.Error != nil {
-		log.Println("[WARN] could not get visible talks:", result)
+	// Load the talks from the file
+	if err := t.load(r); err != nil {
+		return nil, err
 	}
 
-	return talks
+	return t, nil
+}
+
+func (t *Talks) load(r io.Reader) error {
+	// json decode the file
+	dec := json.NewDecoder(r)
+	for {
+		var event TalkEvent
+		if err := dec.Decode(&event); err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		if err := t.event(event); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Writes an event to the log
+func (t *Talks) write(event TalkEvent) error {
+	// Write the event to the file
+	return t.encoder.Encode(event)
+}
+
+// Applies an event to the in-memory state
+func (t *Talks) event(event TalkEvent) error {
+	// switch on the event type
+	switch event.Type {
+	case Create:
+		t.create(event.Create)
+	case Hide:
+		t.hide(event.Hide)
+	case Delete:
+		t.delete(event.Delete)
+	default:
+		return fmt.Errorf("unknown event type: %v", event.Type)
+	}
+
+	return nil
+}
+
+// Write and apply an event and handle any errors
+func (t *Talks) writeAndApply(event TalkEvent) {
+	log.Println("[INFO] Applying event:", event.Type, "[", event, "]")
+
+	if err := t.write(event); err != nil {
+		log.Println("[ERROR] Failed to write event:", err)
+	}
+
+	if err := t.event(event); err != nil {
+		log.Println("[ERROR] Failed to apply event:", err)
+	}
+}
+
+// Applies a create event to the in-memory state
+func (t *Talks) create(c *CreateTalkEvent) {
+	if c.ID > t.id {
+		t.id = c.ID
+	}
+
+	t.talks[c.ID] = &Talk{
+		ID:          c.ID,
+		Name:        c.Name,
+		Type:        c.Type,
+		Description: c.Description,
+		Week:        c.Week,
+		Hidden:      false,
+	}
+
+	// Add the talk to the week index
+	if _, ok := t.weeks[c.Week]; !ok {
+		t.weeks[c.Week] = make([]*Talk, 0)
+	}
+	t.weeks[c.Week] = append(t.weeks[c.Week], t.talks[c.ID])
+}
+
+// Create creates a new talk
+func (t *Talks) Create(name string, talkType TalkType, description string, week string) {
+	t.Lock()
+
+	// Increment the ID counter
+	t.id++
+	event := TalkEvent{
+		Time: Now(),
+		Type: Create,
+		Create: &CreateTalkEvent{
+			ID:          t.id,
+			Name:        name,
+			Type:        talkType,
+			Description: description,
+			Week:        week,
+		},
+	}
+	t.writeAndApply(event)
+
+	t.Unlock()
+}
+
+// Applies a hide event to the in-memory state
+func (t *Talks) hide(h *HideTalkEvent) {
+	if _, ok := t.talks[h.ID]; !ok {
+		return
+	}
+
+	t.talks[h.ID].Hidden = true
+}
+
+// Hide hides a talk
+func (t *Talks) Hide(id uint32) {
+	t.Lock()
+
+	event := TalkEvent{
+		Time: Now(),
+		Type: Hide,
+		Hide: &HideTalkEvent{
+			ID: id,
+		},
+	}
+	t.writeAndApply(event)
+
+	t.Unlock()
+}
+
+// Applies a delete event to the in-memory state
+func (t *Talks) delete(d *DeleteTalkEvent) {
+	if _, ok := t.talks[d.ID]; !ok {
+		return
+	}
+
+	// Remove the talk from the week index
+	week := t.talks[d.ID].Week
+	for i, talk := range t.weeks[week] {
+		if talk.ID == d.ID {
+			// Swap remove
+			t.weeks[week][i] = t.weeks[week][len(t.weeks[week])-1]
+			t.weeks[week] = t.weeks[week][:len(t.weeks[week])-1]
+		}
+	}
+	delete(t.talks, d.ID)
+}
+
+// Delete deletes a talk
+func (t *Talks) Delete(id uint32) {
+	t.Lock()
+
+	event := TalkEvent{
+		Time: Now(),
+		Type: Delete,
+		Delete: &DeleteTalkEvent{
+			ID: id,
+		},
+	}
+	t.writeAndApply(event)
+
+	t.Unlock()
 }
 
 // AllTalks returns all talks for a given week
-// If week is empty, it will default to this week
-func AllTalks(week string) []Talk {
-	dbLock.Lock()
-	defer dbLock.Unlock()
-
-	if week == "" {
-		week = nextWednesday()
-	}
-
-	var talks []Talk
-	result := db.Where("week = ?", week).Order("type").Find(&talks)
-
-	if result.Error != nil {
-		log.Println("[WARN] could not get all talks:", result)
-	}
+func (t *Talks) AllTalks(week string) []*Talk {
+	t.RLock()
+	talks := t.weeks[week]
+	t.RUnlock()
 
 	return talks
 }
 
-// CreateTalk inserts a new talk into the db
-func CreateTalk(talk *Talk) uint32 {
-	dbLock.Lock()
-	defer dbLock.Unlock()
-
-	result := db.Create(talk)
-
-	if result.Error != nil {
-		log.Println("[WARN] could not create talk:", result)
+// VisibleTalks returns all visible talks for a given week
+func (t *Talks) VisibleTalks(week string) []*Talk {
+	t.RLock()
+	talks := make([]*Talk, 0)
+	for _, talk := range t.weeks[week] {
+		if !talk.Hidden {
+			talks = append(talks, talk)
+		}
 	}
+	t.RUnlock()
 
-	log.Println("[INFO] Created talk {", talk.Name, talk.Description, talk.Type, talk.Week, talk.ID, "}")
-	return talk.ID
-}
-
-// HideTalk updates a talk, setting its isHidden field to true
-func HideTalk(id uint32) {
-	dbLock.Lock()
-	defer dbLock.Unlock()
-
-	talk := Talk{}
-	result := db.First(&talk, id)
-
-	if result.Error != nil {
-		log.Println("[WARN] could not find talk:", result)
-	}
-
-	talk.IsHidden = true
-	result = db.Save(&talk)
-
-	if result.Error != nil {
-		log.Println("[WARN] could not hide talk:", result)
-	}
-}
-
-// DeleteTalk deletes a talk from the db
-func DeleteTalk(id uint32) {
-	dbLock.Lock()
-	defer dbLock.Unlock()
-
-	talk := Talk{}
-	result := db.First(&talk, id)
-
-	if result.Error != nil {
-		log.Println("[WARN] could not find talk:", result)
-	}
-
-	result = db.Delete(&talk)
-
-	if result.Error != nil {
-		log.Println("[WARN] could not delete talk:", result)
-	}
+	return talks
 }

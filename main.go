@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"html/template"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/go-co-op/gocron"
+	"github.com/gofrs/flock"
 	"github.com/gorilla/mux"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday/v2"
@@ -50,14 +52,30 @@ func main() {
 	config.Validate()
 	trustedNetworks = config.Network()
 
-	// Connect to the database
-	err = ConnectDB(&config)
+	// Use flock to ensure only one instance of go-talks is running
+	flock := flock.New(config.Database + ".lock")
+	locked, err := flock.TryLock()
 	if err != nil {
-		log.Fatalln("[ERROR] Failed to connect to the database", err)
+		log.Fatalln("[ERROR] Failed to lock database", err)
+	}
+	if !locked {
+		log.Fatalln("[ERROR] Database is already locked by another instance of go-talks")
 	}
 
-	// Set up all tables
-	MakeDB()
+	// Open the database with r/w and create if it doesn't exist
+	db, err := os.OpenFile(config.Database, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatalln("[ERROR] Failed to open database", err)
+	}
+	// Split db into a buffered reader and a non-buffered writer
+	dbReader := bufio.NewReader(db)
+
+	// Connect to the database
+	talks, err = NewTalks(dbReader, db)
+	if err != nil {
+		log.Fatalln("[ERROR] Failed to open database", err)
+	}
+	log.Println("[INFO] Loaded", len(talks.talks), "talks")
 
 	// Load templates and add markdown function
 	tmpls = template.Must(template.New("").Funcs(template.FuncMap{"safe_markdown": markDownerSafe, "unsafe_markdown": markDownerUnsafe}).ParseGlob("templates/*.gohtml"))
@@ -102,7 +120,6 @@ func main() {
 
 	// Schedule backup tasks
 	s := gocron.NewScheduler(tz)
-	s.Wednesday().At("23:59").Do(backup)
 	s.Every(1).Day().At("00:00").Do(invalidateCache)
 
 	// Start servers
