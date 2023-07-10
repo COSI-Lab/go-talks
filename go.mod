@@ -9,7 +9,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/microcosm-cc/bluemonday v1.0.24
 	github.com/russross/blackfriday/v2 v2.1.0
-	golang.org/x/net v0.11.0
+	golang.org/x/net v0.12.0
 	gorm.io/driver/sqlite v1.5.2
 	gorm.io/gorm v1.25.2
 )
