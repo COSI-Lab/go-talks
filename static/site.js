@@ -15,13 +15,14 @@ var password = null;
 // save the password in the cookie
 function setPasswordCookie(password) {
     const expirationDate = new Date();
-    // expire after 7 days
-    expirationDate.setDate(expirationDate.getDate() + 7);
+    // expire after 30 days
+    expirationDate.setDate(expirationDate.getDate() + 30);
     const cookieValue = encodeURIComponent(password);
     const cookieName = "password";
     const cookieOptions = {
         expires: expirationDate.toUTCString(),
-        path: "/"
+        path: "/",
+        sameSite: "strict"
     };
 
     document.cookie = `${cookieName}=${cookieValue}; ${Object.entries(cookieOptions)
@@ -50,7 +51,7 @@ function removePasswordCookie() {
     authenticated = false;
     document.cookie = "password=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 }
-  
+
 
 // If the user is not authenticated trigger the auth flow
 // Returns a promise that is resolved when the user is authenticated
