@@ -49,7 +49,7 @@ func processMessage(message *Message) bool {
 			return false
 		}
 
-		talks.Create(message.New.Name, message.New.Talktype, message.New.Description, message.New.Week)
+		message.New.ID = talks.Create(message.New.Name, message.New.Talktype, message.New.Description, message.New.Week)
 
 		// Update the message's description to be parsed as markdown
 		message.New.Description = string(markDownerSafe(message.New.Description))

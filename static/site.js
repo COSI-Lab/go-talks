@@ -98,6 +98,8 @@ function auth() {
 var seen = new Set();
 // Sync requests are used to update the table with the latest data
 function sync() {
+    console.log("Syncing week " + week);
+
     const data = {
         type: 4,
         sync: {
@@ -131,13 +133,14 @@ function connect() {
             seen.add(data.new.id);
         } else if (data.type == 1 || data.type == 2) {
             // Hide the talk from the table
-            hideTalk(data.hide);
+            hideTalk(data.hide.id);
         } else if (data.type == 3) {
             // Receiving an auth message means we have successfully authenticated
             handleAuth(data.auth);
         } else if (data.type == 4) {
             // Remove talks that we didn't see in this sync
             hideTalksNotIn(seen);
+            console.log("Sync complete");
         }
     };
     socket.onclose = function (e) {
@@ -248,7 +251,7 @@ function hideTalks(predicate) {
     const table = document.getElementById("tb");
     const rows = document.getElementById('tb').children;
 
-    for(let i = rows.length - 1; i >= 0; i--) {
+    for (let i = rows.length - 1; i >= 0; i--) {
         if (rows[i].getAttribute("class") == "event" && predicate(rows[i])) {
             table.removeChild(rows[i]);
         }
@@ -256,8 +259,10 @@ function hideTalks(predicate) {
 }
 
 function hideTalk(id) {
+    console.log("Hiding talk", id);
+
     hideTalks((row) => {
-        return row.children[0].innerText == id;
+        return parseInt(row.children[0].innerText) == id;
     });
 }
 
@@ -299,7 +304,7 @@ function addTalk(talk) {
         // Order by talk type then by id
         let childtype = stringToType[rows[i].children[2].innerText]
 
-        if (talk.talktype < childtype) {
+        if (stringToType[talk.talktype] < childtype) {
             break;
         }
     }

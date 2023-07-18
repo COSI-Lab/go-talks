@@ -83,7 +83,7 @@ func (t TalkType) MarshalJSON() ([]byte, error) {
 	case Announcement:
 		s = "announcement"
 	case AfterMeetingSlot:
-		s = "after meeting slot"
+		s = "after-meeting slot"
 	default:
 		s = "unknown"
 	}
@@ -105,7 +105,7 @@ func (t *TalkType) UnmarshalJSON(b []byte) error {
 		*t = ProjectUpdate
 	case "announcement":
 		*t = Announcement
-	case "after meeting slot":
+	case "after-meeting slot":
 		*t = AfterMeetingSlot
 	}
 	return nil
@@ -123,7 +123,7 @@ func (t TalkType) String() string {
 	case Announcement:
 		return "announcement"
 	case AfterMeetingSlot:
-		return "after meeting slot"
+		return "after-meeting slot"
 	default:
 		return "unknown"
 	}

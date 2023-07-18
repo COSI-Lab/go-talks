@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"sort"
 	"sync"
 )
 
@@ -124,19 +125,28 @@ func (t *Talks) create(c *CreateTalkEvent) {
 		t.weeks[c.Week] = make([]*Talk, 0)
 	}
 	t.weeks[c.Week] = append(t.weeks[c.Week], t.talks[c.ID])
+
+	sort.Slice(t.weeks[c.Week], func(i, j int) bool {
+		if t.weeks[c.Week][i].Type == t.weeks[c.Week][j].Type {
+			return t.weeks[c.Week][i].ID < t.weeks[c.Week][j].ID
+		}
+		return t.weeks[c.Week][i].Type < t.weeks[c.Week][j].Type
+	})
 }
 
 // Create creates a new talk
-func (t *Talks) Create(name string, talkType TalkType, description string, week string) {
+func (t *Talks) Create(name string, talkType TalkType, description string, week string) uint32 {
 	t.Lock()
 
 	// Increment the ID counter
 	t.id++
+
+	id := t.id
 	event := TalkEvent{
 		Time: Now(),
 		Type: Create,
 		Create: &CreateTalkEvent{
-			ID:          t.id,
+			ID:          id,
 			Name:        name,
 			Type:        talkType,
 			Description: description,
@@ -146,6 +156,7 @@ func (t *Talks) Create(name string, talkType TalkType, description string, week 
 	t.writeAndApply(event)
 
 	t.Unlock()
+	return id
 }
 
 // Applies a hide event to the in-memory state
@@ -183,9 +194,7 @@ func (t *Talks) delete(d *DeleteTalkEvent) {
 	week := t.talks[d.ID].Week
 	for i, talk := range t.weeks[week] {
 		if talk.ID == d.ID {
-			// Swap remove
-			t.weeks[week][i] = t.weeks[week][len(t.weeks[week])-1]
-			t.weeks[week] = t.weeks[week][:len(t.weeks[week])-1]
+			t.weeks[week] = append(t.weeks[week][:i], t.weeks[week][i+1:]...)
 		}
 	}
 	delete(t.talks, d.ID)
