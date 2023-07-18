@@ -18,7 +18,7 @@ var upgrader = websocket.Upgrader{}
 
 // TemplateResponse contains the information needed to render the past and future templates
 type TemplateResponse struct {
-	Talks     []Talk
+	Talks     []*Talk
 	HumanWeek string
 	Week      string
 	NextWeek  string
@@ -32,7 +32,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	human, _ := weekForHumans(week)
 
 	// Prepare response
-	talks := VisibleTalks(week)
+	talks := talks.VisibleTalks(week)
 	res := TemplateResponse{Talks: talks, Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
 
 	// Render the template
@@ -60,10 +60,10 @@ func weekHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Render the template
 	if isPast(nextWednesday(), week) {
-		res.Talks = AllTalks(week)
+		res.Talks = talks.AllTalks(week)
 		err = tmpls.ExecuteTemplate(w, "past.gohtml", res)
 	} else {
-		res.Talks = VisibleTalks(week)
+		res.Talks = talks.VisibleTalks(week)
 		err = tmpls.ExecuteTemplate(w, "future.gohtml", res)
 	}
 
@@ -83,7 +83,7 @@ func indexTalksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	talks := AllTalks(week)
+	talks := talks.AllTalks(week)
 
 	// Parse talks as JSON
 	err = json.NewEncoder(w).Encode(talks)
@@ -105,7 +105,7 @@ func talksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	talks := AllTalks(week)
+	talks := talks.AllTalks(week)
 
 	// Parse talks as JSON
 	err = json.NewEncoder(w).Encode(talks)
@@ -178,6 +178,8 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 			if trustedNetworks.Contains(ip) {
 				authenticated = true
 			}
+		} else {
+			authenticated = true
 		}
 	}
 	log.Printf("[INFO] New connection from %s (authenticated: %t)", ip, authenticated)

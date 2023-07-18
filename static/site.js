@@ -1,9 +1,12 @@
 // Resize text area
 window.onload = function () {
-    document.getElementById("description").addEventListener("input", (e) => {
-        e.target.style.height = "auto";
-        e.target.style.height = (e.target.scrollHeight) + "px";
-    });
+    let area = document.getElementById("description");
+    if (area) {
+        area.addEventListener("input", (e) => {
+            e.target.style.height = "auto";
+            e.target.style.height = (e.target.scrollHeight) + "px";
+        });
+    }
 }
 
 var socket = connect();
@@ -67,7 +70,9 @@ function auth() {
 
     const data = {
         type: 3,
-        password: password
+        auth: {
+            password: password
+        }
     }
 
     const json = JSON.stringify(data);
@@ -89,6 +94,24 @@ function auth() {
     return promise;
 }
 
+// Saves the id we saw since the last sync message
+var seen = new Set();
+// Sync requests are used to update the table with the latest data
+function sync() {
+    const data = {
+        type: 4,
+        sync: {
+            week: week
+        }
+    }
+
+    const json = JSON.stringify(data);
+    console.log(`Sending: ${json}`);
+
+    seen.clear();
+    socket.send(json);
+}
+
 // Connects to the websocket endpoint
 function connect() {
     var ws_scheme = window.location.protocol == "https:" ? "wss://" : "ws://";
@@ -96,6 +119,7 @@ function connect() {
     let socket = new WebSocket(ws_scheme + window.location.host + "/ws");
     socket.onopen = function (e) {
         console.log("Connected!", e);
+        sync();
     };
     socket.onmessage = function (e) {
         const data = JSON.parse(e.data);
@@ -103,13 +127,17 @@ function connect() {
 
         if (data.type == 0) {
             // Add the talk to the table
-            addTalk(data);
+            addTalk(data.new);
+            seen.add(data.new.id);
         } else if (data.type == 1 || data.type == 2) {
             // Hide the talk from the table
-            hideTalk(data.id);
+            hideTalk(data.hide);
         } else if (data.type == 3) {
             // Receiving an auth message means we have successfully authenticated
-            handleAuth(data);
+            handleAuth(data.auth);
+        } else if (data.type == 4) {
+            // Remove talks that we didn't see in this sync
+            hideTalksNotIn(seen);
         }
     };
     socket.onclose = function (e) {
@@ -125,7 +153,7 @@ function connect() {
 
 // User triggers talk deletion
 function del(id) {
-    confirmed = confirm("Are you sure you want to delete this talk? THIS CANNOT BE UNDONE");
+    confirmed = confirm("Are you sure you want to delete this talk?");
     if (!confirmed) {
         return;
     }
@@ -133,7 +161,9 @@ function del(id) {
     auth().then(() => {
         const data = {
             type: 2,
-            id: id
+            delete: {
+                id: id
+            }
         }
 
         const json = JSON.stringify(data);
@@ -150,7 +180,9 @@ function hide(id) {
     auth().then(() => {
         const data = {
             type: 1,
-            id: id
+            hide: {
+                id: id
+            }
         };
 
         const json = JSON.stringify(data);
@@ -176,10 +208,12 @@ function create() {
     auth().then(() => {
         const data = {
             type: 0,
-            name: name,
-            description: description,
-            talktype: parseInt(talktype),
-            week: week
+            new: {
+                name: name,
+                description: description,
+                talktype: typeToString[talktype],
+                week: week
+            }
         };
 
         const json = JSON.stringify(data);
@@ -209,27 +243,39 @@ const stringToType = {
     "after-meeting slot": 4
 }
 
-// Hides the talk from the table
-function hideTalk(id) {
+// Removes all talks that match a predicate
+function hideTalks(predicate) {
     const table = document.getElementById("tb");
     const rows = document.getElementById('tb').children;
 
-    // Find the row to remove
-    let rowToRemove = null
-    for (i = 0; i < rows.length; i++) {
-        if (rows[i].children[0].innerText == id) {
-            rowToRemove = rows[i];
-            break;
+    for(let i = rows.length - 1; i >= 0; i--) {
+        if (rows[i].getAttribute("class") == "event" && predicate(rows[i])) {
+            table.removeChild(rows[i]);
         }
-    }
-
-    if (rowToRemove) {
-        // Remove the row
-        table.removeChild(rowToRemove);
     }
 }
 
-// {"type":0,"name":"string","description":"string","talktype":0}
+function hideTalk(id) {
+    hideTalks((row) => {
+        return row.children[0].innerText == id;
+    });
+}
+
+function hideTalksNotIn(ids) {
+    console.log("Hiding talks not in", ids);
+
+    hideTalks((row) => {
+        return !ids.has(parseInt(row.children[0].innerText));
+    });
+}
+
+// Removes all talks from the table
+function clearTalks() {
+    hideTalks((row) => {
+        return true;
+    });
+}
+
 function addTalk(talk) {
     if (talk.week != week) {
         console.log("Skipping new talk because it is for a different week", talk.week);
@@ -238,6 +284,14 @@ function addTalk(talk) {
 
     const table = document.getElementById("tb");
     const rows = document.getElementById('tb').children;
+
+    // Check to see if the talk is already in the table
+    for (let i = 0; i < rows.length; i++) {
+        if (rows[i].children[0].innerText == talk.id) {
+            console.log("Skipping new talk because it is already in the table", talk.id);
+            return
+        }
+    }
 
     // Insert the new data into the correct location in the table
     let i = 0
@@ -264,7 +318,7 @@ function addTalk(talk) {
 
     var c2 = row.insertCell(2);
     c2.setAttribute("class", "type");
-    c2.innerHTML = typeToString[talk.talktype];
+    c2.innerHTML = talk.talktype;
 
     var c3 = row.insertCell(3);
     c3.setAttribute("class", "description markdown");

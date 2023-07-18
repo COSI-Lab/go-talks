@@ -29,53 +29,45 @@ func processMessage(message *Message) bool {
 	case NEW:
 		// You can not create a talk for a previous meeting
 		wednesday := nextWednesday()
-		if message.Week == "" {
-			message.Week = wednesday
-		} else if isPast(wednesday, message.Week) {
+		if message.New.Week == "" {
+			message.New.Week = wednesday
+		} else if isPast(wednesday, message.New.Week) {
 			return false
 		}
 
 		// Validate talk type
-		talk := &Talk{}
-		if *message.Talktype > 4 {
+		if message.New.Talktype > 4 {
 			return false
 		}
-		talk.Type = *message.Talktype
 
 		// Validate talk description
-		if message.Description == "" {
+		if message.New.Description == "" {
 			return false
 		}
-		talk.Description = message.Description
+		// Validate talk name
+		if message.New.Name == "" {
+			return false
+		}
+
+		talks.Create(message.New.Name, message.New.Talktype, message.New.Description, message.New.Week)
 
 		// Update the message's description to be parsed as markdown
-		message.Description = string(markDownerSafe(message.Description))
+		message.New.Description = string(markDownerSafe(message.New.Description))
 
-		// Validate talk name
-		if message.Name == "" {
-			return false
-		}
-		talk.Name = message.Name
-		talk.Week = message.Week
-
-		// TODO: Talk order
-		talk.Order = 0
-
-		message.ID = CreateTalk(talk)
 		return true
 	case HIDE:
 		// During meetings we hide talks instead of deleting them
 		if duringMeeting() {
-			log.Println("[INFO] Hide talk {", message.ID, "}")
-			HideTalk(message.ID)
+			log.Println("[INFO] Hide talk {", message.Hide.ID, "}")
+			talks.Hide(message.Hide.ID)
 		} else {
-			log.Println("[INFO] Delete talk {", message.ID, "}")
-			DeleteTalk(message.ID)
+			log.Println("[INFO] Delete talk {", message.Hide.ID, "}")
+			talks.Delete(message.Hide.ID)
 		}
 		return true
 	case DELETE:
-		log.Println("[INFO] Delete talk {", message.ID, "}")
-		DeleteTalk(message.ID)
+		log.Println("[INFO] Delete talk {", message.Hide.ID, "}")
+		talks.Delete(message.Hide.ID)
 		return true
 	default:
 		return false
@@ -93,6 +85,8 @@ func (hub *Hub) run() {
 			delete(hub.clients, client)
 			close(client.send)
 		case message := <-hub.broadcast:
+			log.Println("[INFO] Broadcast message:", message)
+
 			// broadcasts the message to all clients (including the one that sent the message)
 			if !processMessage(&message) {
 				log.Println("[WARN] Invalid message")
