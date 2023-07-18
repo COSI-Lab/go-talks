@@ -10,6 +10,48 @@ var socket = connect();
 var authenticated = false;
 var resolve_auth = undefined;
 var reject_auth = undefined;
+var password = null;
+
+// save the password in the cookie
+function setPasswordCookie(password) {
+    const expirationDate = new Date();
+    // expire after 30 days
+    expirationDate.setDate(expirationDate.getDate() + 30);
+    const cookieValue = encodeURIComponent(password);
+    const cookieName = "password";
+    const cookieOptions = {
+        expires: expirationDate.toUTCString(),
+        path: "/",
+        sameSite: "strict"
+    };
+
+    document.cookie = `${cookieName}=${cookieValue}; ${Object.entries(cookieOptions)
+        .map(([key, value]) => `${key}=${value}`)
+        .join("; ")}`;
+}
+
+// retrieve the password from the cookie
+function getPasswordCookie() {
+    const cookieName = "password=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const cookieArray = decodedCookie.split(';');
+
+    // find the value with key: "password"
+    for (let i = 0; i < cookieArray.length; i++) {
+        let cookie = cookieArray[i].trim();
+        if (cookie.startsWith(cookieName)) {
+            return cookie.substring(cookieName.length);
+        }
+    }
+    return null;
+}
+
+function removePasswordCookie() {
+    // set the expiration time to a past date and then it will be deleted automatically
+    authenticated = false;
+    document.cookie = "password=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+}
+
 
 // If the user is not authenticated trigger the auth flow
 // Returns a promise that is resolved when the user is authenticated
@@ -18,7 +60,10 @@ function auth() {
         return Promise.resolve();
     }
 
-    const password = prompt("Please enter the password to authenticate");
+    // first try to get the password from cookie, if it doesn't exist, get it from client
+    if ((password = getPasswordCookie()) === null) {
+        password = prompt("Please enter the password to authenticate");
+    }
 
     const data = {
         type: 3,
@@ -238,8 +283,10 @@ function handleAuth(data) {
     authenticated = success;
 
     if (resolve_auth && success) {
+        setPasswordCookie(password);
         resolve_auth();
     } else if (reject_auth && !success) {
+        removeAuthenticationCookie()
         reject_auth("Authentication failed");
     }
 }
