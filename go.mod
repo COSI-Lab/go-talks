@@ -8,7 +8,7 @@ require (
 	github.com/gofrs/flock v0.8.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
-	github.com/microcosm-cc/bluemonday v1.0.24
+	github.com/microcosm-cc/bluemonday v1.0.25
 	github.com/russross/blackfriday/v2 v2.1.0
 	golang.org/x/net v0.12.0
 )
