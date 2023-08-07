@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/BurntSushi/toml v1.3.2
-	github.com/go-co-op/gocron v1.30.1
+	github.com/go-co-op/gocron v1.31.0
 	github.com/gofrs/flock v0.8.1
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.5.0
