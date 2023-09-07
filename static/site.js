@@ -124,6 +124,9 @@ function connect() {
         sync();
     };
     socket.onmessage = function (e) {
+        const date = new Date();
+        const presentWeek = date.parse("YYYYMMDD");
+
         const data = JSON.parse(e.data);
         console.log("Received:", data);
 
@@ -132,8 +135,10 @@ function connect() {
             addTalk(data.new);
             seen.add(data.new.id);
         } else if (data.type == 1 || data.type == 2) {
-            // Hide the talk from the table
-            hideTalk(data.hide.id);
+            if (!(week < presentWeek)){
+                // Hide the talk from the table
+                hideTalk(data.hide.id);
+            }
         } else if (data.type == 3) {
             // Receiving an auth message means we have successfully authenticated
             handleAuth(data.auth);
