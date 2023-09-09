@@ -124,8 +124,7 @@ function connect() {
         sync();
     };
     socket.onmessage = function (e) {
-        const date = new Date();
-        const presentWeek = date.parse("YYYYMMDD");
+        const presentWeek = parseInt(Date.parse("YYYYMMDD"));
 
         const data = JSON.parse(e.data);
         console.log("Received:", data);
