@@ -124,7 +124,6 @@ function connect() {
         sync();
     };
     socket.onmessage = function (e) {
-        const presentWeek = parseInt(Date.parse("YYYYMMDD"));
 
         const data = JSON.parse(e.data);
         console.log("Received:", data);
@@ -134,7 +133,7 @@ function connect() {
             addTalk(data.new);
             seen.add(data.new.id);
         } else if (data.type == 1 || data.type == 2) {
-            if (!(week < presentWeek)){
+            if (!past){
                 // Hide the talk from the table
                 hideTalk(data.hide.id);
             }
