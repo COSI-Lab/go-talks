@@ -9,7 +9,9 @@ window.onload = function () {
     }
 }
 
-var socket = connect();
+if (!past) {
+    var socket = connect();
+}
 var authenticated = false;
 var resolve_auth = undefined;
 var reject_auth = undefined;
