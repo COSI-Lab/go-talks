@@ -141,9 +141,11 @@ function connect() {
             // Receiving an auth message means we have successfully authenticated
             handleAuth(data.auth);
         } else if (data.type == 4) {
+            if (!past){
             // Remove talks that we didn't see in this sync
             hideTalksNotIn(seen);
             console.log("Sync complete");
+            }
         }
     };
     socket.onclose = function (e) {
