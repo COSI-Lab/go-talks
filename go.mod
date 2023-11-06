@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/go-co-op/gocron v1.32.0
 	github.com/gofrs/flock v0.8.1
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/microcosm-cc/bluemonday v1.0.25
 	github.com/russross/blackfriday/v2 v2.1.0
