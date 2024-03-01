@@ -1,12 +1,16 @@
-version: '3.1'
-
 services:
   web:
     build: .
-    restart: always
+    restart: unless-stopped
     container_name: talks
     volumes:
       - ./talks.db:/root/talks.db
       - ./config.toml:/root/config.toml:ro
-    ports:
-      - 8000:80
+    expose:
+      - 80
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
