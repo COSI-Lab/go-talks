@@ -172,7 +172,7 @@ func socketHandler(w http.ResponseWriter, r *http.Request) {
 	authenticated := false
 	if trustedNetworks.Contains(ip) {
 		// Could be a load balancer, check the X-REAL-IP header
-		if realIP := r.Header.Get("X-REAL-IP"); realIP != "" {
+		if realIP := r.Header.Get("X-Forwarded-For"); realIP != "" {
 			// Check if the real IP is in the trusted network
 			ip = net.ParseIP(realIP)
 			if trustedNetworks.Contains(ip) {
