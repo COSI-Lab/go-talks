@@ -78,7 +78,7 @@ func main() {
 	log.Println("[INFO] Loaded", len(talks.talks), "talks")
 
 	// Load templates and add markdown function
-	tmpls = template.Must(template.New("").Funcs(template.FuncMap{"safe_markdown": markDownerSafe, "unsafe_markdown": markDownerUnsafe}).ParseGlob("templates/*.gohtml"))
+	tmpls = template.Must(template.New("").Funcs(template.FuncMap{"safe_markdown": markDownerSafe, "unsafe_markdown": markDownerUnsafe}).ParseGlob("templates/*.html"))
 
 	if err != nil {
 		log.Fatalln("[ERROR] Failed to compile some template(s)", err)

@@ -36,7 +36,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	res := TemplateResponse{Talks: talks, Week: week, HumanWeek: human, NextWeek: addWeek(week), PrevWeek: subtractWeek(week)}
 
 	// Render the template
-	err := tmpls.ExecuteTemplate(w, "future.gohtml", res)
+	err := tmpls.ExecuteTemplate(w, "future.html", res)
 	if err != nil {
 		log.Println("[WARN] Failed to render template:", err)
 	}
@@ -61,10 +61,10 @@ func weekHandler(w http.ResponseWriter, r *http.Request) {
 	// Render the template
 	if isPast(nextWednesday(), week) {
 		res.Talks = talks.AllTalks(week)
-		err = tmpls.ExecuteTemplate(w, "past.gohtml", res)
+		err = tmpls.ExecuteTemplate(w, "past.html", res)
 	} else {
 		res.Talks = talks.VisibleTalks(week)
-		err = tmpls.ExecuteTemplate(w, "future.gohtml", res)
+		err = tmpls.ExecuteTemplate(w, "future.html", res)
 	}
 
 	if err != nil {
@@ -215,7 +215,7 @@ func markdownFactory(post string) func(http.ResponseWriter, *http.Request) {
 	buff := bytes.NewBuffer(nil)
 
 	// Render the markdown
-	err = tmpls.ExecuteTemplate(buff, "markdown.gohtml", Post{
+	err = tmpls.ExecuteTemplate(buff, "markdown.html", Post{
 		Title:   post,
 		Content: string(content),
 	})
