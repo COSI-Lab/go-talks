@@ -23,6 +23,6 @@ build:
     - echo "$CI_REGISTRY_PASSWORD" | buildah login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
   script:
     - buildah images
-    - buildah build -t $FQ_IMAGE_NAME
+    - buildah build -t $FQ_IMAGE_NAME --storage-driver "$STORAGE_DRIVER"
     - buildah images
     - buildah push $FQ_IMAGE_NAME
