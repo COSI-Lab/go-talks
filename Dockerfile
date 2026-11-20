@@ -21,5 +21,9 @@ COPY ./posts ./posts
 
 COPY --from=go-build /go/src/server .
 
+# Really shitty TEMPORARY workaround for persistent files
+RUN ln -s /root/talks-data/config.toml config.toml
+RUN ln -s /root/talks-data/talks.db talks.db
+
 # Run the server
 CMD ["/root/server"]
