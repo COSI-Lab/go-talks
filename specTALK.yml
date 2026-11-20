@@ -1,49 +1,44 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: talks
+  name: go-talks
   namespace: cosi
   labels:
-    app: talks #DO NOT JST PUT "C"!!!
+    app: go-talks #DO NOT JST PUT "C"!!!
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: talks
+      app: go-talks
   template:
     metadata:
       labels:
-        app: talks
+        app: go-talks
     spec:
       containers:
-        - name: talks
-          image: registry.cosi.clarkson.edu/cosi-meta/talks
+        - name: go-talks
+          image: registry.cosi.clarkson.edu/cosi-meta/go-talks
           ports:
-            - containerPort: 8080
+            - containerPort: 80
           #CONECT TO THE POD HERE PT 1
           volumeMounts:
             - name: data
-              mountPath: /home/talks/talks/data
+              mountPath: /home/go-talks/go-talks/data
           #^^^
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-            limits:
-              cpu: 200m
-              memory: 128Mi
+          #Resources where unessisary
+            #no limits for the free!
       #CONECT TO THE POD HERE PT 2
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: talks-data # use name from PersistentVolumeClaim
+            claimName: go-talks-data # use name from PersistentVolumeClaim
       #^^^
 ---
 
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-    name: talks-data #Kabab case, USE FOR PART 2!
+    name: go-talks-data #Kabab case, USE FOR PART 2!
     namespace: cosi
 spec:
     accessModes:
@@ -56,27 +51,27 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: talks
+  name: go-talks
   namespace: cosi
 spec:
-  selector: {app: talks}
+  selector: {app: go-talks}
   ports:
     - port: 80
-      targetPort: 8080 #The port you are using for the containerPort.
+      targetPort: 80 #The port you are using for the containerPort.
 ---
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: talks-tls
+  name: go-talks-tls
   namespace: cosi
 spec:
   entryPoints:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`talks.cosi.clarkson.edu`)
+      match: Host(`talks.cosi.clarkson.edu`) || Host(`talks.cslabs.clarkson.edu`) || Host(`sklat.cosi.clarkson.edu`) || Host(`sklat.cslabs.clarkson.edu`)
       services:
-        - name: talks
+        - name: go-talks
           port: 80
   tls:
     certResolver: le
@@ -84,13 +79,13 @@ spec:
 apiVersion: traefik.io/v1alpha1
 kind: IngressRoute
 metadata:
-  name: talks-redirect
+  name: go-talks-redirect
   namespace: cosi
 spec:
   entryPoints:
     - web
   routes:
-  - match: Host(`talks.cosi.clarkson.edu`)
+  - match: Host(`talks.cosi.clarkson.edu`) || Host(`talks.cslabs.clarkson.edu`) || Host(`sklat.cosi.clarkson.edu`) || Host(`sklat.cslabs.clarkson.edu`)
     kind: Rule
     middlewares:
     - name: https-redirect
