@@ -4,8 +4,8 @@ services:
     restart: unless-stopped
     container_name: talks
     volumes:
-      - ./talks.db:/root/talks.db
-      - ./config.toml:/root/config.toml:ro
+      - ./talks.db:/root/talks-data/talks.db
+      - ./config.toml:/root/talks-data/config.toml:ro
     expose:
       - 80
     networks:
